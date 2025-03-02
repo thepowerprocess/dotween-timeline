@@ -20,8 +20,9 @@ namespace Dott.Editor
         public event Action DuplicateClicked;
         public event Action StopClicked;
         public event Action PlayClicked;
+        public event Action<bool> LoopToggled;
 
-        public void DrawTimeline(DottAnimation[] animations, DottAnimation selected, bool isPlaying, float currentPlayingTime)
+        public void DrawTimeline(DottAnimation[] animations, DottAnimation selected, bool isPlaying, float currentPlayingTime, bool isLooping)
         {
             var rect = DottGUI.GetTimelineControlRect(animations.Length);
 
@@ -87,6 +88,12 @@ namespace Dott.Editor
                 case false when DottGUI.PlayButton(rect):
                     PlayClicked?.Invoke();
                     break;
+            }
+
+            var loopResult = DottGUI.LoopToggle(rect, isLooping);
+            if (loopResult != isLooping)
+            {
+                LoopToggled?.Invoke(loopResult);
             }
         }
 

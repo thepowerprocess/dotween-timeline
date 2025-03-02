@@ -1,17 +1,33 @@
+using System;
 using DG.Tweening;
 using JetBrains.Annotations;
+using UnityEditor;
 
 namespace Dott.Editor
 {
-    public class DottController
+    public class DottController : IDisposable
     {
         private double startTime;
+        private DottAnimation[] currentPlayAnimations;
 
         public bool IsPlaying => DottEditorPreview.IsPlaying;
         public float ElapsedTime => (float)(DottEditorPreview.CurrentTime - startTime);
 
+        public bool Loop
+        {
+            get => EditorPrefs.GetBool("Dott.Loop", false);
+            set => EditorPrefs.SetBool("Dott.Loop", value);
+        }
+
+        public DottController()
+        {
+            DottEditorPreview.Completed += DottEditorPreviewOnCompleted;
+        }
+
         public void Play(DottAnimation[] animations)
         {
+            currentPlayAnimations = animations;
+
             animations.ForEach(PreviewTween);
             DottEditorPreview.Start();
             startTime = DottEditorPreview.CurrentTime;
@@ -34,6 +50,7 @@ namespace Dott.Editor
 
         public void Stop()
         {
+            currentPlayAnimations = null;
             DottEditorPreview.Stop();
         }
 
@@ -47,6 +64,24 @@ namespace Dott.Editor
 
             DottEditorPreview.Add(tween, animation.IsFrom);
             return tween;
+        }
+
+        private void DottEditorPreviewOnCompleted()
+        {
+            if (!Loop)
+            {
+                Stop();
+                return;
+            }
+
+            DottEditorPreview.Stop();
+            Play(currentPlayAnimations);
+        }
+
+        public void Dispose()
+        {
+            Stop();
+            DottEditorPreview.Completed -= DottEditorPreviewOnCompleted;
         }
     }
 }

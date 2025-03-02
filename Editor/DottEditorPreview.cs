@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using DG.Tweening;
@@ -24,6 +25,7 @@ namespace Dott.Editor
 
         public static bool IsPlaying { get; private set; }
         public static double CurrentTime { get; private set; }
+        public static event Action Completed;
 
         static DottEditorPreview()
         {
@@ -83,7 +85,7 @@ namespace Dott.Editor
             var activeTweens = Tweens.Any(tweenData => tweenData.Tween.IsPlaying());
             if (!activeTweens)
             {
-                Stop();
+                Completed?.Invoke();
             }
         }
     }

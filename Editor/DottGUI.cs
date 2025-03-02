@@ -13,6 +13,7 @@ namespace Dott.Editor
         private const int TIME_HEIGHT = 20;
         private const int HEADER_HEIGHT = 28;
         private static readonly Vector2 PlayButtonSize = new(44, 24);
+        private static readonly Vector2 LoopToggleSize = new(24, 24);
 
         private static readonly Color[] Colors =
         {
@@ -243,6 +244,15 @@ namespace Dott.Editor
             var position = rect.position + new Vector2(2, (HEADER_HEIGHT - PlayButtonSize.y) / 2);
             var buttonRect = new Rect(position, PlayButtonSize);
             return GUI.Button(buttonRect, "■");
+        }
+
+        public static bool LoopToggle(Rect rect, bool value)
+        {
+            var position = rect.position + new Vector2(rect.width - LoopToggleSize.x - 2, (HEADER_HEIGHT - LoopToggleSize.y) / 2);
+            var toggleRect = new Rect(position, LoopToggleSize);
+            var iconContent = EditorGUIUtility.IconContent("preAudioLoopOff");
+            var style = new GUIStyle(GUI.skin.button) { padding = new RectOffset(0, 0, 0, 0) };
+            return GUI.Toggle(toggleRect, value, iconContent, style);
         }
 
         private static void RoundRect(Rect rect, Color color, float borderRadius, float borderWidth = 0)

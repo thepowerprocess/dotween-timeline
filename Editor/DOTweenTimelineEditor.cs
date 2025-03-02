@@ -25,7 +25,7 @@ namespace Dott.Editor
             animations = Timeline.GetComponents<ABSAnimationComponent>().Select(DottAnimation.Create).ToArray();
             selection.Validate(animations);
 
-            view.DrawTimeline(animations, selection.Animation, controller.IsPlaying, controller.ElapsedTime);
+            view.DrawTimeline(animations, selection.Animation, controller.IsPlaying, controller.ElapsedTime, controller.Loop);
 
             if (selection.Animation != null)
             {
@@ -53,6 +53,7 @@ namespace Dott.Editor
 
             view.PlayClicked += Play;
             view.StopClicked += controller.Stop;
+            view.LoopToggled += ToggleLoop;
         }
 
         private void OnDisable()
@@ -71,8 +72,9 @@ namespace Dott.Editor
 
             view.PlayClicked -= Play;
             view.StopClicked -= controller.Stop;
+            view.LoopToggled -= ToggleLoop;
 
-            controller.Stop();
+            controller.Dispose();
             controller = null;
 
             selection.Dispose();
@@ -147,6 +149,11 @@ namespace Dott.Editor
 
             var animation = DottAnimation.Create((ABSAnimationComponent)dest);
             selection.Set(animation);
+        }
+
+        private void ToggleLoop(bool value)
+        {
+            controller.Loop = value;
         }
     }
 }
