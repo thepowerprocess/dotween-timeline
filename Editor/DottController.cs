@@ -46,6 +46,8 @@ namespace Dott.Editor
                     tween.Goto(tweenTime, andPlay: false);
                 }
             }
+
+            DottEditorPreview.QueuePlayerLoopUpdate();
         }
 
         public void Stop()

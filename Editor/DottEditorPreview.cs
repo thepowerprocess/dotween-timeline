@@ -64,6 +64,8 @@ namespace Dott.Editor
             }
 
             Tweens.Clear();
+
+            QueuePlayerLoopUpdate();
         }
 
         public static void Add([NotNull] Tween tween, bool isFrom)
@@ -75,12 +77,18 @@ namespace Dott.Editor
             tween.Play();
         }
 
+        public static void QueuePlayerLoopUpdate()
+        {
+            EditorApplication.QueuePlayerLoopUpdate();
+        }
+
         private static void Update()
         {
             var prevTime = CurrentTime;
             CurrentTime = EditorApplication.timeSinceStartup;
             var delta = CurrentTime - prevTime;
             DOTween.ManualUpdate((float)delta, (float)delta);
+            QueuePlayerLoopUpdate();
 
             var activeTweens = Tweens.Any(tweenData => tweenData.Tween.IsPlaying());
             if (!activeTweens)
