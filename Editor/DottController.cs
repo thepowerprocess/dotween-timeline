@@ -1,6 +1,5 @@
 using DG.Tweening;
 using JetBrains.Annotations;
-using UnityEditor;
 
 namespace Dott.Editor
 {
