@@ -18,16 +18,21 @@ namespace Dott
         {
             if (autoGenerate)
             {
-                CreateTween(autoPlay);
+                CreateTween(regenerateIfExists: false, autoPlay);
             }
         }
 
-        public void CreateTween(bool andPlay = true)
+        public void CreateTween(bool regenerateIfExists, bool andPlay = true)
         {
             if (tween != null)
             {
                 if (tween.active)
                 {
+                    if (!regenerateIfExists)
+                    {
+                        return;
+                    }
+
                     tween.Kill();
                 }
 

@@ -18,7 +18,7 @@ namespace Dott
                         break;
 
                     case DOTweenCallback callback:
-                        callback.CreateTween();
+                        callback.CreateTween(regenerateIfExists: true);
                         break;
                 }
 
