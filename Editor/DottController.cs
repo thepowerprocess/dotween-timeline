@@ -8,15 +8,23 @@ namespace Dott.Editor
     public class DottController : IDisposable
     {
         private double startTime;
+        private float gotoTime;
         private DottAnimation[] currentPlayAnimations;
 
         public bool IsPlaying => DottEditorPreview.IsPlaying;
-        public float ElapsedTime => (float)(DottEditorPreview.CurrentTime - startTime);
+        public float ElapsedTime => Paused ? gotoTime : (float)(DottEditorPreview.CurrentTime - startTime);
+        public bool Paused { get; private set; }
 
         public bool Loop
         {
             get => EditorPrefs.GetBool("Dott.Loop", false);
             set => EditorPrefs.SetBool("Dott.Loop", value);
+        }
+
+        public bool FreezeFrame
+        {
+            get => EditorPrefs.GetBool("Dott.FreezeFrame", false);
+            set => EditorPrefs.SetBool("Dott.FreezeFrame", value);
         }
 
         public DottController()
@@ -31,12 +39,14 @@ namespace Dott.Editor
             animations.ForEach(PreviewTween);
             DottEditorPreview.Start();
             startTime = DottEditorPreview.CurrentTime;
+            Paused = false;
         }
 
         public void GoTo(DottAnimation[] animations, in float time)
         {
             DottEditorPreview.Stop();
 
+            gotoTime = time;
             foreach (var animation in animations)
             {
                 var tween = PreviewTween(animation);
@@ -53,7 +63,13 @@ namespace Dott.Editor
         public void Stop()
         {
             currentPlayAnimations = null;
+            Paused = false;
             DottEditorPreview.Stop();
+        }
+
+        public void Pause()
+        {
+            Paused = true;
         }
 
         [CanBeNull]

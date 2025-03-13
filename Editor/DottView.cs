@@ -21,8 +21,9 @@ namespace Dott.Editor
         public event Action StopClicked;
         public event Action PlayClicked;
         public event Action<bool> LoopToggled;
+        public event Action<bool> FreezeFrameClicked;
 
-        public void DrawTimeline(DottAnimation[] animations, DottAnimation selected, bool isPlaying, float currentPlayingTime, bool isLooping)
+        public void DrawTimeline(DottAnimation[] animations, DottAnimation selected, bool isPlaying, float currentPlayingTime, bool isLooping, bool isFreezeFrame, bool isPaused)
         {
             var rect = DottGUI.GetTimelineControlRect(animations.Length);
 
@@ -53,7 +54,7 @@ namespace Dott.Editor
                 DuplicateClicked?.Invoke();
             }
 
-            if (isPlaying)
+            if (isPlaying || isPaused)
             {
                 var time = currentPlayingTime * timeScale;
                 DottGUI.TimeVerticalLine(tweensRect, time);
@@ -94,6 +95,12 @@ namespace Dott.Editor
             if (loopResult != isLooping)
             {
                 LoopToggled?.Invoke(loopResult);
+            }
+
+            var freezeFrameResult = DottGUI.FreezeFrameToggle(rect, isFreezeFrame);
+            if (freezeFrameResult != isFreezeFrame)
+            {
+                FreezeFrameClicked?.Invoke(freezeFrameResult);
             }
         }
 

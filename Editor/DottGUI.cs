@@ -14,6 +14,7 @@ namespace Dott.Editor
         private const int HEADER_HEIGHT = 28;
         private static readonly Vector2 PlayButtonSize = new(44, 24);
         private static readonly Vector2 LoopToggleSize = new(24, 24);
+        private static readonly Vector2 FreezeToggleSize = new(24, 24);
 
         private static readonly Color[] Colors =
         {
@@ -255,10 +256,35 @@ namespace Dott.Editor
             return GUI.Toggle(toggleRect, value, iconContent, style);
         }
 
+        public static bool FreezeFrameToggle(Rect rect, bool value)
+        {
+            var position = rect.position + new Vector2(rect.width - LoopToggleSize.x - 2 - FreezeToggleSize.x - 2, (HEADER_HEIGHT - FreezeToggleSize.y) / 2);
+            var toggleRect = new Rect(position, FreezeToggleSize);
+            var style = new GUIStyle(GUI.skin.button) { padding = new RectOffset(0, 0, 0, 0) };
+            return GUI.Toggle(toggleRect, value, IconFreezeFrame, style);
+        }
+
         private static void RoundRect(Rect rect, Color color, float borderRadius, float borderWidth = 0)
         {
             GUI.DrawTexture(rect, EditorGUIUtility.whiteTexture, ScaleMode.StretchToFill, alphaBlend: false,
                 imageAspect: 0, color, borderWidth, borderRadius);
         }
+
+        #region Icons
+
+        private static readonly Texture2D IconFreezeFrame = ImageFromString(ICON_FREEZE_FRAME, 48, 48);
+
+        private const string ICON_FREEZE_FRAME =
+            "iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAN4SURBVHgB7ZhfSFNRGMDP1nK2zSZG6oyLIwV98KWsXmVQDz5YVG9RT0JMfZHAx8rSXhT7Y4gP4YtMyr3NxCRBmyyKCRpEJoqK0Jjur2PDzdx2+z679z7Y3eTOq012fvBxv51zvnP/nO9833dGCIVCoVAoFEruoiASYVm2AC43QDQphnxTKBTOFLYX4HI5hd0WiA1sw+QwgYe4y6anI43ts31s7xGJqIh0+C//HsQu0v85je0HkIBIex1IA8gpIpFMXoDnEyz3cykGMN4BF8fedvjyeGkgGaAkxxz6Av+bnHwBjPFPQL4Q+XBwc84SCiW3UKXQsx7hYWdmZnrtdvsrsT5JEx0RJ0ASIPGFhYWncA3Mzc1FVCoV63a7m/x+f1lNTc1DbixGyCSRG6hbLoE8BrkiwUwo25eXl2+1t7cre3p6GCw/Y7GYe2dnx4V6X18fg2O8Xm+DmK0swH3uc6XvAwlmytbWViMq29vb0dHRURPqXV1dpTBPAqWtra0U28bGxuoSicRudWc2m9FG3mSb4QugXWhzc/O7y+X6uLS0ZOHbp6am+qenp/v536urq0Pr6+sTkUjkB9j495v3qEqJfCil9TqdzmkwGK5VVlbeBHfRYQf4fxE8aBHqg4ODWqPReLukpORqXl7eLNicgWY1kZMDrEAAjYLB4ARs2GHUw+Fw88jISK/NZnsdCASasA1W6B3sgUnuHvIfLzPdA1ar9Vx9fb3wNQcGBs6Dm8xycyXhZX46HI4yvr+2tvbk+Pi4gezjJQcJoya4sViE+ApL/8+xUq1WswzDCGGxqqoqxt0fNyzO83ttbS2f7y8uLlZubGwoySFEoYwO9egO2OnxeCbBTd6i7vP5mtF9UEKhUDPnQsOQDya4uYJEbmDSAvz3gHMlMbkoYrb7ZePx+BvuwWLgUrubGLLwMEQhK+rd3d1a6NtKJpMsjOUjVdpNLO/ypAEezAs+7wNf/xWNRr0VFRV3sB1DKMR9hclkMuNvCLFDGo3mrFarNej1+nJwx9MkC1A2NjaWo4JJCpMV6pi8+ESGSQ3bMMlBssP9QbjklxWnRmGl+TIBywb0JSwjQNyod3Z2MlhmrKysXBezTTvxESEUaPPz8x2FhYUui8XCtLS0KJxOpweSXFF1dfWjvWOzESF8wyZ+sbi4+FKs7zhwbA80FAqF8pc/YIJhbIXLtTcAAAAASUVORK5CYII=";
+
+        private static Texture2D ImageFromString(string source, int width, int height)
+        {
+            var bytes = Convert.FromBase64String(source);
+            var texture = new Texture2D(width, height);
+            texture.LoadImage(bytes);
+            return texture;
+        }
+
+        #endregion
     }
 }

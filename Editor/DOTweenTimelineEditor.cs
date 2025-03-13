@@ -25,11 +25,17 @@ namespace Dott.Editor
             animations = Timeline.GetComponents<ABSAnimationComponent>().Select(DottAnimation.Create).ToArray();
             selection.Validate(animations);
 
-            view.DrawTimeline(animations, selection.Animation, controller.IsPlaying, controller.ElapsedTime, controller.Loop);
+            view.DrawTimeline(animations, selection.Animation, controller.IsPlaying, controller.ElapsedTime,
+                controller.Loop, controller.FreezeFrame, controller.Paused);
 
             if (selection.Animation != null)
             {
                 view.DrawInspector(selection.GetAnimationEditor());
+            }
+
+            if (controller.Paused && Event.current.type == EventType.Repaint)
+            {
+                controller.GoTo(animations, controller.ElapsedTime);
             }
         }
 
@@ -43,7 +49,7 @@ namespace Dott.Editor
             view.TweenDrag += DragSelectedAnimation;
 
             view.TimeDragStart += controller.Stop;
-            view.TimeDragEnd += controller.Stop;
+            view.TimeDragEnd += OnTimeDragEnd;
             view.TimeDrag += GoTo;
 
             view.AddClicked += AddAnimation;
@@ -54,6 +60,7 @@ namespace Dott.Editor
             view.PlayClicked += Play;
             view.StopClicked += controller.Stop;
             view.LoopToggled += ToggleLoop;
+            view.FreezeFrameClicked += ToggleFreeze;
         }
 
         private void OnDisable()
@@ -62,7 +69,7 @@ namespace Dott.Editor
             view.TweenDrag -= DragSelectedAnimation;
 
             view.TimeDragStart -= controller.Stop;
-            view.TimeDragEnd -= controller.Stop;
+            view.TimeDragEnd -= OnTimeDragEnd;
             view.TimeDrag += GoTo;
 
             view.AddClicked -= AddAnimation;
@@ -73,6 +80,7 @@ namespace Dott.Editor
             view.PlayClicked -= Play;
             view.StopClicked -= controller.Stop;
             view.LoopToggled -= ToggleLoop;
+            view.FreezeFrameClicked -= ToggleFreeze;
 
             controller.Dispose();
             controller = null;
@@ -93,6 +101,18 @@ namespace Dott.Editor
         private void GoTo(float time)
         {
             controller.GoTo(animations, time);
+        }
+
+        private void OnTimeDragEnd()
+        {
+            if (controller.FreezeFrame)
+            {
+                controller.Pause();
+            }
+            else
+            {
+                controller.Stop();
+            }
         }
 
         private void DragSelectedAnimation(float time)
@@ -154,6 +174,16 @@ namespace Dott.Editor
         private void ToggleLoop(bool value)
         {
             controller.Loop = value;
+        }
+
+        private void ToggleFreeze(bool value)
+        {
+            controller.FreezeFrame = value;
+
+            if (!value)
+            {
+                controller.Stop();
+            }
         }
     }
 }
