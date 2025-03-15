@@ -15,7 +15,7 @@ namespace Dott.Editor
         private DottController controller;
         private DottSelection selection;
         private DottView view;
-        private float dragTweenTimeShift = -1;
+        private float? dragTweenTimeShift;
         private DottAnimation[] animations;
 
         public override bool RequiresConstantRepaint() => true;
@@ -117,12 +117,9 @@ namespace Dott.Editor
 
         private void DragSelectedAnimation(float time)
         {
-            if (dragTweenTimeShift < 0)
-            {
-                dragTweenTimeShift = time - selection.Animation.Delay;
-            }
+            dragTweenTimeShift ??= time - selection.Animation.Delay;
 
-            var delay = time - dragTweenTimeShift;
+            var delay = time - dragTweenTimeShift.Value;
             delay = Mathf.Max(0, delay);
             delay = (float)Math.Round(delay, 2);
             selection.Animation.Delay = delay;
@@ -134,7 +131,7 @@ namespace Dott.Editor
             // clear focus to correctly update inspector
             GUIUtility.keyboardControl = 0;
 
-            dragTweenTimeShift = -1;
+            dragTweenTimeShift = null;
         }
 
         private void AddAnimation()

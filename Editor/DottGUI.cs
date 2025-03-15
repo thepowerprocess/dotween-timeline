@@ -106,7 +106,7 @@ namespace Dott.Editor
                 var animation = animations[i];
                 var rowRect = new Rect(rect.x, rect.y + i * ROW_HEIGHT, rect.width, ROW_HEIGHT);
                 var isSelected = selected == animation;
-                var tweenRect = Tween(animation, rowRect, isSelected, timeScale);
+                var tweenRect = Element(animation, rowRect, isSelected, timeScale);
 
                 ProcessDragEvents(tweenRect, ref isTweenDragging, start: Start, end: null);
 
@@ -129,11 +129,94 @@ namespace Dott.Editor
             return rect;
         }
 
+        private static Rect Element(DottAnimation animation, Rect rowRect, bool isSelected, float timeScale)
+        {
+            if (animation.Component is DOTweenCallback callback)
+            {
+                return Callback(callback, rowRect, isSelected, timeScale);
+            }
+
+            return Tween(animation, rowRect, isSelected, timeScale);
+        }
+
+        private static Rect Callback(DOTweenCallback callback, Rect rowRect, bool isSelected, float timeScale)
+        {
+            void Label(Rect rect, GUIContent content, GUIStyle style)
+            {
+                GUI.Label(rect, content, style);
+            }
+
+            void Icon(bool isHovered, Rect iconRect)
+            {
+                var iconColor = Color.white.SetAlpha(0.6f);
+                if (isSelected)
+                {
+                    iconColor = new Color(0.2f, 0.6f, 1f);
+                }
+                else if (isHovered)
+                {
+                    iconColor = Color.white.SetAlpha(0.5f);
+                }
+
+                GUI.DrawTexture(iconRect, IconCallback, ScaleMode.ScaleToFit, true, 0, iconColor, 0, 0);
+            }
+
+            void Underline(bool isHovered, Rect textRect)
+            {
+                if (!isSelected && !isHovered) { return; }
+
+                var underlineRect = new Rect(textRect.x, textRect.yMax - 4, textRect.width, 1);
+                var color = isHovered ? Color.white.SetAlpha(0.7f) : Color.white;
+                EditorGUI.DrawRect(underlineRect, color);
+            }
+
+            var textStyle = new GUIStyle(GUI.skin.label)
+            {
+                fontStyle = FontStyle.Bold, fontSize = 10,
+                alignment = TextAnchor.MiddleCenter,
+                normal = { textColor = Color.white }
+            };
+
+            var iconX = CalculateX(rowRect, callback.delay, timeScale);
+            var iconRect = new Rect(iconX, rowRect.y, width: 10, height: 20);
+
+            var label = callback.id;
+            var isEmptyId = string.IsNullOrEmpty(label);
+            if (isEmptyId)
+            {
+                textStyle.fontStyle = FontStyle.BoldAndItalic;
+                label = "\'empty id\'";
+            }
+
+            var labelContent = new GUIContent(label);
+
+            textStyle.padding = new RectOffset((int)iconRect.width + 4, 0, 0, 1);
+            var textWidth = textStyle.CalcSize(labelContent).x;
+            var rect = new Rect(iconRect.x, rowRect.y, textWidth, rowRect.height);
+
+            var onRightSide = rect.x > rowRect.x + rowRect.width * 0.5f;
+            var outOfBounds = rect.xMax > rowRect.xMax;
+            if (onRightSide && outOfBounds)
+            {
+                (textStyle.padding.right, textStyle.padding.left) = (textStyle.padding.left, textStyle.padding.right);
+                rect.x = iconRect.xMax - textWidth;
+            }
+
+            var textOnlyRect = rect.Shift(textStyle.padding.left, 0, -textStyle.padding.horizontal, 0);
+            var isHovered = rect.Contains(Event.current.mousePosition);
+
+            Icon(isHovered, iconRect);
+            Underline(isHovered, textOnlyRect);
+            Label(rect, labelContent, textStyle);
+
+            return rect;
+        }
+
         private static Rect Tween(DottAnimation animation, Rect rowRect, bool isSelected, float timeScale)
         {
             var isInfinite = animation.Loops == -1;
             var loops = Mathf.Max(1, animation.Loops);
-            var start = rowRect.x + animation.Delay * timeScale * rowRect.width;
+            var start = CalculateX(rowRect, animation.Delay, timeScale);
             var width = isInfinite
                 ? rowRect.width - start + rowRect.x
                 : animation.Duration * loops * timeScale * rowRect.width;
@@ -171,6 +254,11 @@ namespace Dott.Editor
             GUI.Label(tweenRect, label, style);
 
             return tweenRect;
+        }
+
+        private static float CalculateX(Rect rowRect, float time, float timeScale)
+        {
+            return rowRect.x + time * timeScale * rowRect.width;
         }
 
         public static void TimeVerticalLine(Rect rect, float time)
@@ -273,9 +361,13 @@ namespace Dott.Editor
         #region Icons
 
         private static readonly Texture2D IconFreezeFrame = ImageFromString(ICON_FREEZE_FRAME, 48, 48);
+        private static readonly Texture2D IconCallback = ImageFromString(ICON_CALLBACK, 20, 40);
 
         private const string ICON_FREEZE_FRAME =
             "iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAN4SURBVHgB7ZhfSFNRGMDP1nK2zSZG6oyLIwV98KWsXmVQDz5YVG9RT0JMfZHAx8rSXhT7Y4gP4YtMyr3NxCRBmyyKCRpEJoqK0Jjur2PDzdx2+z679z7Y3eTOq012fvBxv51zvnP/nO9833dGCIVCoVAoFEruoiASYVm2AC43QDQphnxTKBTOFLYX4HI5hd0WiA1sw+QwgYe4y6anI43ts31s7xGJqIh0+C//HsQu0v85je0HkIBIex1IA8gpIpFMXoDnEyz3cykGMN4BF8fedvjyeGkgGaAkxxz6Av+bnHwBjPFPQL4Q+XBwc84SCiW3UKXQsx7hYWdmZnrtdvsrsT5JEx0RJ0ASIPGFhYWncA3Mzc1FVCoV63a7m/x+f1lNTc1DbixGyCSRG6hbLoE8BrkiwUwo25eXl2+1t7cre3p6GCw/Y7GYe2dnx4V6X18fg2O8Xm+DmK0swH3uc6XvAwlmytbWViMq29vb0dHRURPqXV1dpTBPAqWtra0U28bGxuoSicRudWc2m9FG3mSb4QugXWhzc/O7y+X6uLS0ZOHbp6am+qenp/v536urq0Pr6+sTkUjkB9j495v3qEqJfCil9TqdzmkwGK5VVlbeBHfRYQf4fxE8aBHqg4ODWqPReLukpORqXl7eLNicgWY1kZMDrEAAjYLB4ARs2GHUw+Fw88jISK/NZnsdCASasA1W6B3sgUnuHvIfLzPdA1ar9Vx9fb3wNQcGBs6Dm8xycyXhZX46HI4yvr+2tvbk+Pi4gezjJQcJoya4sViE+ApL/8+xUq1WswzDCGGxqqoqxt0fNyzO83ttbS2f7y8uLlZubGwoySFEoYwO9egO2OnxeCbBTd6i7vP5mtF9UEKhUDPnQsOQDya4uYJEbmDSAvz3gHMlMbkoYrb7ZePx+BvuwWLgUrubGLLwMEQhK+rd3d1a6NtKJpMsjOUjVdpNLO/ypAEezAs+7wNf/xWNRr0VFRV3sB1DKMR9hclkMuNvCLFDGo3mrFarNej1+nJwx9MkC1A2NjaWo4JJCpMV6pi8+ESGSQ3bMMlBssP9QbjklxWnRmGl+TIBywb0JSwjQNyod3Z2MlhmrKysXBezTTvxESEUaPPz8x2FhYUui8XCtLS0KJxOpweSXFF1dfWjvWOzESF8wyZ+sbi4+FKs7zhwbA80FAqF8pc/YIJhbIXLtTcAAAAASUVORK5CYII=";
+
+        private const string ICON_CALLBACK =
+            "iVBORw0KGgoAAAANSUhEUgAAABQAAAAoCAYAAAD+MdrbAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAD4SURBVHgB7ZWxCoJQFIaPkkuOQVtDLQ02tPQGDrn6CvU+tbeH4NTmCzgLRWM0NGhBuCiBBXZO3eISFXppMLgf/ChX7ufPWQ6ApHIo3HsX08ZoUI4zZodZ84c9x3GmWZYleUmSJNnTXVboiUUfckGoCDqGJFKZsKbrehME0TRNBzYqFX6MFEqhFErhnwsvcRxvQZA0TQ/4OPFnHdu2RyJrAIts8O4YXnYK0cKYvu/Pi4hoj3ieN8M7Fty35VvqmD61jaJo+UkWhuGKtRpAwbV7a+u67oQfA9fKxDSgJPRng9oGQbCgsFYGfGmlFBDTGB4zijBHkEgqzhX38zVoGGkfagAAAABJRU5ErkJggg==";
 
         private static Texture2D ImageFromString(string source, int width, int height)
         {

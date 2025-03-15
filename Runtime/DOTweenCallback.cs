@@ -9,7 +9,7 @@ namespace Dott
     public class DOTweenCallback : ABSAnimationComponent
     {
         [SerializeField] public string id;
-        [SerializeField] public float delay;
+        [Min(0)] [SerializeField] public float delay;
         [SerializeField] public UnityEvent onCallback;
         [SerializeField] public bool autoGenerate = true;
         [SerializeField] public bool autoPlay = true;

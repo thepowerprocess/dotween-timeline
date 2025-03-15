@@ -63,7 +63,7 @@ namespace Dott.Editor
                 set => callback.delay = value;
             }
 
-            public float Duration => 0.2f;
+            public float Duration => 0f;
             public int Loops => 0;
             public ABSAnimationComponent Component => callback;
             public bool IsValid => true;
@@ -74,7 +74,7 @@ namespace Dott.Editor
                 // Need to return a valid tween for preview playback
                 DOTween.Sequence().InsertCallback(Delay + Duration, () => { });
 
-            public string Label() => $"[{callback.id}]";
+            public string Label() => string.Empty;
 
             public CallbackAdapter(DOTweenCallback callback)
             {
