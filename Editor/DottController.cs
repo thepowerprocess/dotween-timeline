@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using DG.Tweening;
 using JetBrains.Annotations;
 using UnityEditor;
@@ -36,7 +38,7 @@ namespace Dott.Editor
         {
             currentPlayAnimations = animations;
 
-            animations.ForEach(PreviewTween);
+            Sort(animations).ForEach(PreviewTween);
             DottEditorPreview.Start();
             startTime = DottEditorPreview.CurrentTime;
             Paused = false;
@@ -47,7 +49,8 @@ namespace Dott.Editor
             DottEditorPreview.Stop();
 
             gotoTime = time;
-            foreach (var animation in animations)
+            var sortedAnimations = Sort(animations);
+            foreach (var animation in sortedAnimations)
             {
                 var tween = PreviewTween(animation);
                 if (tween != null)
@@ -82,6 +85,11 @@ namespace Dott.Editor
 
             DottEditorPreview.Add(tween, animation.IsFrom);
             return tween;
+        }
+
+        private static IEnumerable<DottAnimation> Sort(DottAnimation[] animations)
+        {
+            return animations.OrderBy(animation => animation.Delay);
         }
 
         private void DottEditorPreviewOnCompleted()
