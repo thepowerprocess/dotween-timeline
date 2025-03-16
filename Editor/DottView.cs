@@ -65,7 +65,7 @@ namespace Dott.Editor
                 var time = DottGUI.GetScaledTimeUnderMouse(timeRect);
                 DottGUI.TimeVerticalLine(tweensRect, time);
 
-                if (Event.current.type == EventType.MouseDrag)
+                if (Event.current.type is EventType.MouseDrag or EventType.MouseDown)
                 {
                     TimeDrag?.Invoke(time / timeScale);
                 }
