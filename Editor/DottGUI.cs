@@ -272,6 +272,16 @@ namespace Dott.Editor
             EditorGUILayout.Space();
             GUILayout.Label("Inspector", EditorStyles.boldLabel);
             editor.OnInspectorGUI();
+
+            var verticalLine = EditorGUILayout.GetControlRect(GUILayout.Height(1));
+            EditorGUI.DrawRect(verticalLine, Color.gray);
+        }
+
+        public static void Properties(SerializedObject serializedObject)
+        {
+            EditorGUILayout.Space(3f);
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("autoPlay"));
+            serializedObject.ApplyModifiedProperties();
         }
 
         public static bool AddButton(Rect timelineRect)

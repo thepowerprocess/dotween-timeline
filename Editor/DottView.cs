@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using UnityEditor;
 using UnityEngine;
 
 namespace Dott.Editor
@@ -107,6 +108,11 @@ namespace Dott.Editor
         public void DrawInspector(UnityEditor.Editor editor)
         {
             DottGUI.Inspector(editor);
+        }
+
+        public void DrawProperties(SerializedObject serializedObject)
+        {
+            DottGUI.Properties(serializedObject);
         }
 
         private static float CalculateTimeScale(DottAnimation[] animations)

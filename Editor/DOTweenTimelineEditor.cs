@@ -37,6 +37,8 @@ namespace Dott.Editor
             {
                 controller.GoTo(animations, controller.ElapsedTime);
             }
+
+            view.DrawProperties(serializedObject);
         }
 
         private void OnEnable()
