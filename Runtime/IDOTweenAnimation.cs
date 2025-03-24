@@ -16,6 +16,9 @@ namespace Dott
         bool IsValid { get; }
         bool IsActive { get; }
         bool IsFrom { get; }
+        bool AllowEditorCallbacks => false;
+        bool CallbackView => false;
+        Texture2D CustomIcon => null;
         string Label { get; }
         Component Component { get; }
         [CanBeNull] Tween CreateEditorPreview();

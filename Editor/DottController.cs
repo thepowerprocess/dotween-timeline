@@ -55,6 +55,20 @@ namespace Dott.Editor
                 var tween = PreviewTween(animation);
                 if (tween != null)
                 {
+                    if (tween is Sequence)
+                    {
+                        // Sequences have no real delay, so we don't need to subtract it
+                        var sequenceTime = time;
+                        if (time < animation.Delay)
+                        {
+                            // Ensure time is 0 before the first child tween starts
+                            // to prevent unexpected onRewind calls
+                            sequenceTime = 0;
+                        }
+
+                        tween.Goto(sequenceTime, andPlay: false);
+                    }
+
                     var tweenTime = time - animation.Delay;
                     tween.Goto(tweenTime, andPlay: false);
                 }
@@ -83,7 +97,7 @@ namespace Dott.Editor
             var tween = animation.CreateEditorPreview();
             if (tween == null) { return null; }
 
-            DottEditorPreview.Add(tween, animation.IsFrom);
+            DottEditorPreview.Add(tween, animation.IsFrom, animation.AllowEditorCallbacks);
             return tween;
         }
 

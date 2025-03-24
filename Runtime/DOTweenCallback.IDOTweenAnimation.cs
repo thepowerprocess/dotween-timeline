@@ -16,7 +16,8 @@ namespace Dott
         bool IDOTweenAnimation.IsValid => true;
         bool IDOTweenAnimation.IsActive => true;
         bool IDOTweenAnimation.IsFrom => false;
-        string IDOTweenAnimation.Label => string.Empty;
+        bool IDOTweenAnimation.CallbackView => true;
+        string IDOTweenAnimation.Label => string.IsNullOrEmpty(id) ? "<i>Callback</i>" : id;
         Component IDOTweenAnimation.Component => this;
 
         Tween IDOTweenAnimation.CreateEditorPreview() =>

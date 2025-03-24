@@ -4,6 +4,7 @@ using System.Linq;
 using DG.Tweening;
 using JetBrains.Annotations;
 using UnityEditor;
+using UnityEngine;
 
 namespace Dott.Editor
 {
@@ -29,6 +30,10 @@ namespace Dott.Editor
 
         static DottEditorPreview()
         {
+            if (!Application.isPlaying)
+            {
+                DOTween.useSafeMode = false;
+            }
         }
 
         public static void Start()
@@ -68,12 +73,16 @@ namespace Dott.Editor
             QueuePlayerLoopUpdate();
         }
 
-        public static void Add([NotNull] Tween tween, bool isFrom)
+        public static void Add([NotNull] Tween tween, bool isFrom, bool allowCallbacks)
         {
             Tweens.Add(new TweenData(tween, isFrom));
             tween.SetUpdate(UpdateType.Manual);
             tween.SetAutoKill(false);
-            tween.OnComplete(null).OnStart(null).OnPlay(null).OnPause(null).OnUpdate(null).OnWaypointChange(null).OnStepComplete(null).OnRewind(null).OnKill(null);
+            if (!allowCallbacks)
+            {
+                tween.OnComplete(null).OnStart(null).OnPlay(null).OnPause(null).OnUpdate(null).OnWaypointChange(null).OnStepComplete(null).OnRewind(null).OnKill(null);
+            }
+
             tween.Play();
         }
 
