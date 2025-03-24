@@ -1,5 +1,6 @@
 using System;
 using DG.DemiEditor;
+using JetBrains.Annotations;
 using UnityEditor;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -95,17 +96,17 @@ namespace Dott.Editor
             return time;
         }
 
-        public static Rect Tweens(Rect rect, DottAnimation[] animations, float timeScale, DottAnimation selected, ref bool isTweenDragging, Action<DottAnimation> tweenSelected)
+        public static Rect Tweens(Rect rect, IDOTweenAnimation[] animations, float timeScale, [CanBeNull] IDOTweenAnimation selected, ref bool isTweenDragging, Action<IDOTweenAnimation> tweenSelected)
         {
             rect = rect.ShiftY(HEADER_HEIGHT + TIME_HEIGHT).SetHeight(animations.Length * ROW_HEIGHT);
 
-            DottAnimation startDrag = null;
+            IDOTweenAnimation startDrag = null;
 
             for (var i = 0; i < animations.Length; i++)
             {
                 var animation = animations[i];
                 var rowRect = new Rect(rect.x, rect.y + i * ROW_HEIGHT, rect.width, ROW_HEIGHT);
-                var isSelected = selected == animation;
+                var isSelected = selected?.Component == animation.Component;
                 var tweenRect = Element(animation, rowRect, isSelected, timeScale);
 
                 ProcessDragEvents(tweenRect, ref isTweenDragging, start: Start, end: null);
@@ -129,7 +130,7 @@ namespace Dott.Editor
             return rect;
         }
 
-        private static Rect Element(DottAnimation animation, Rect rowRect, bool isSelected, float timeScale)
+        private static Rect Element(IDOTweenAnimation animation, Rect rowRect, bool isSelected, float timeScale)
         {
             if (animation.Component is DOTweenCallback callback)
             {
@@ -212,7 +213,7 @@ namespace Dott.Editor
             return rect;
         }
 
-        private static Rect Tween(DottAnimation animation, Rect rowRect, bool isSelected, float timeScale)
+        private static Rect Tween(IDOTweenAnimation animation, Rect rowRect, bool isSelected, float timeScale)
         {
             var isInfinite = animation.Loops == -1;
             var loops = Mathf.Max(1, animation.Loops);
@@ -244,7 +245,7 @@ namespace Dott.Editor
             var color = Colors.GetRandom();
             EditorGUI.DrawRect(colorLine, color.SetAlpha(0.6f * alphaMultiplier));
 
-            var label = animation.Label();
+            var label = animation.Label;
             var style = new GUIStyle(GUI.skin.label)
             {
                 fontStyle = FontStyle.Bold, fontSize = 10,

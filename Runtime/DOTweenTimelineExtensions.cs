@@ -1,5 +1,5 @@
 using DG.Tweening;
-using DG.Tweening.Core;
+using UnityEngine;
 
 namespace Dott
 {
@@ -8,21 +8,21 @@ namespace Dott
         public static Sequence AsSequence(this DOTweenTimeline timeline)
         {
             var sequence = DOTween.Sequence();
-            var components = timeline.GetComponents<ABSAnimationComponent>();
+            var components = timeline.GetComponents<MonoBehaviour>();
             foreach (var component in components)
             {
                 switch (component)
                 {
                     case DOTweenAnimation animation:
                         animation.CreateTween(regenerateIfExists: true);
+                        sequence.Insert(0, animation.tween);
                         break;
 
-                    case DOTweenCallback callback:
-                        callback.CreateTween(regenerateIfExists: true);
+                    case IDOTweenAnimation animation:
+                        var tween = animation.CreateTween(regenerateIfExists: true);
+                        sequence.Insert(0, tween);
                         break;
                 }
-
-                sequence.Insert(0, component.tween);
             }
 
             return sequence;

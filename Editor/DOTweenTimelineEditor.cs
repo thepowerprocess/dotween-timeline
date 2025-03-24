@@ -1,7 +1,6 @@
 using System;
 using System.Linq;
 using DG.Tweening;
-using DG.Tweening.Core;
 using UnityEditor;
 using UnityEngine;
 
@@ -16,13 +15,13 @@ namespace Dott.Editor
         private DottSelection selection;
         private DottView view;
         private float? dragTweenTimeShift;
-        private DottAnimation[] animations;
+        private IDOTweenAnimation[] animations;
 
         public override bool RequiresConstantRepaint() => true;
 
         public override void OnInspectorGUI()
         {
-            animations = Timeline.GetComponents<ABSAnimationComponent>().Select(DottAnimation.Create).ToArray();
+            animations = Timeline.GetComponents<MonoBehaviour>().Select(DottAnimation.FromComponent).Where(animation => animation != null).ToArray();
             selection.Validate(animations);
 
             view.DrawTimeline(animations, selection.Animation, controller.IsPlaying, controller.ElapsedTime,
@@ -33,12 +32,12 @@ namespace Dott.Editor
                 view.DrawInspector(selection.GetAnimationEditor());
             }
 
+            view.DrawProperties(serializedObject);
+
             if (controller.Paused && Event.current.type == EventType.Repaint)
             {
                 controller.GoTo(animations, controller.ElapsedTime);
             }
-
-            view.DrawProperties(serializedObject);
         }
 
         private void OnEnable()
@@ -127,7 +126,7 @@ namespace Dott.Editor
             selection.Animation.Delay = delay;
         }
 
-        private void OnTweenSelected(DottAnimation animation)
+        private void OnTweenSelected(IDOTweenAnimation animation)
         {
             selection.Set(animation);
             // clear focus to correctly update inspector
@@ -146,10 +145,10 @@ namespace Dott.Editor
             Add<DOTweenCallback>(Timeline);
         }
 
-        private void Add<T>(DOTweenTimeline timeline) where T : ABSAnimationComponent
+        private void Add<T>(DOTweenTimeline timeline) where T : Component
         {
             var component = ObjectFactory.AddComponent<T>(timeline.gameObject);
-            var animation = DottAnimation.Create(component);
+            var animation = DottAnimation.FromComponent(component);
             selection.Set(animation);
         }
 
@@ -166,7 +165,7 @@ namespace Dott.Editor
             var dest = source.gameObject.AddComponent(source.GetType());
             EditorUtility.CopySerialized(source, dest);
 
-            var animation = DottAnimation.Create((ABSAnimationComponent)dest);
+            var animation = DottAnimation.FromComponent(dest);
             selection.Set(animation);
         }
 

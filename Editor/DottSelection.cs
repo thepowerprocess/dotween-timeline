@@ -5,12 +5,12 @@ namespace Dott.Editor
 {
     public class DottSelection
     {
-        private static DottAnimation animation;
+        private static IDOTweenAnimation animation;
         private UnityEditor.Editor editor;
 
-        public DottAnimation Animation => animation;
+        public IDOTweenAnimation Animation => animation;
 
-        public void Validate(DottAnimation[] animations)
+        public void Validate(IDOTweenAnimation[] animations)
         {
             if (animation != null && !animations.Contains(animation))
             {
@@ -18,7 +18,7 @@ namespace Dott.Editor
             }
         }
 
-        public void Set(DottAnimation animation)
+        public void Set(IDOTweenAnimation animation)
         {
             DottSelection.animation = animation;
         }

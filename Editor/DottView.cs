@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using JetBrains.Annotations;
 using UnityEditor;
 using UnityEngine;
 
@@ -13,7 +14,7 @@ namespace Dott.Editor
         public event Action TimeDragStart;
         public event Action TimeDragEnd;
         public event Action<float> TimeDrag;
-        public event Action<DottAnimation> TweenSelected;
+        public event Action<IDOTweenAnimation> TweenSelected;
         public event Action<float> TweenDrag;
         public event Action AddClicked;
         public event Action CallbackClicked;
@@ -24,7 +25,7 @@ namespace Dott.Editor
         public event Action<bool> LoopToggled;
         public event Action<bool> FreezeFrameClicked;
 
-        public void DrawTimeline(DottAnimation[] animations, DottAnimation selected, bool isPlaying, float currentPlayingTime, bool isLooping, bool isFreezeFrame, bool isPaused)
+        public void DrawTimeline(IDOTweenAnimation[] animations, [CanBeNull] IDOTweenAnimation selected, bool isPlaying, float currentPlayingTime, bool isLooping, bool isFreezeFrame, bool isPaused)
         {
             var rect = DottGUI.GetTimelineControlRect(animations.Length);
 
@@ -115,7 +116,7 @@ namespace Dott.Editor
             DottGUI.Properties(serializedObject);
         }
 
-        private static float CalculateTimeScale(DottAnimation[] animations)
+        private static float CalculateTimeScale(IDOTweenAnimation[] animations)
         {
             var maxTime = animations.Length > 0
                 ? animations.Max(animation => animation.Delay + animation.Duration * Mathf.Max(1, animation.Loops))

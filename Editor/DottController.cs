@@ -11,7 +11,7 @@ namespace Dott.Editor
     {
         private double startTime;
         private float gotoTime;
-        private DottAnimation[] currentPlayAnimations;
+        private IDOTweenAnimation[] currentPlayAnimations;
 
         public bool IsPlaying => DottEditorPreview.IsPlaying;
         public float ElapsedTime => Paused ? gotoTime : (float)(DottEditorPreview.CurrentTime - startTime);
@@ -34,7 +34,7 @@ namespace Dott.Editor
             DottEditorPreview.Completed += DottEditorPreviewOnCompleted;
         }
 
-        public void Play(DottAnimation[] animations)
+        public void Play(IDOTweenAnimation[] animations)
         {
             currentPlayAnimations = animations;
 
@@ -44,7 +44,7 @@ namespace Dott.Editor
             Paused = false;
         }
 
-        public void GoTo(DottAnimation[] animations, in float time)
+        public void GoTo(IDOTweenAnimation[] animations, in float time)
         {
             DottEditorPreview.Stop();
 
@@ -76,7 +76,7 @@ namespace Dott.Editor
         }
 
         [CanBeNull]
-        private static Tween PreviewTween(DottAnimation animation)
+        private static Tween PreviewTween(IDOTweenAnimation animation)
         {
             if (!animation.IsValid || !animation.IsActive) { return null; }
 
@@ -87,7 +87,7 @@ namespace Dott.Editor
             return tween;
         }
 
-        private static IEnumerable<DottAnimation> Sort(DottAnimation[] animations)
+        private static IEnumerable<IDOTweenAnimation> Sort(IDOTweenAnimation[] animations)
         {
             return animations.OrderBy(animation => animation.Delay);
         }

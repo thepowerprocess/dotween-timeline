@@ -1,7 +1,6 @@
 using System.Linq;
 using DG.DemiEditor;
 using DG.Tweening;
-using DG.Tweening.Core;
 using UnityEditor;
 using UnityEngine;
 
@@ -19,7 +18,7 @@ namespace Dott.Editor
         protected override string GetId(DOTweenCallback component) => component.id;
     }
 
-    public abstract class DOTweenComponentPropertyDrawer<T> : PropertyDrawer where T : ABSAnimationComponent
+    public abstract class DOTweenComponentPropertyDrawer<T> : PropertyDrawer where T : MonoBehaviour
     {
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {

@@ -1,12 +1,11 @@
 using DG.Tweening;
-using DG.Tweening.Core;
 using UnityEngine;
 using UnityEngine.Events;
 
 namespace Dott
 {
     [AddComponentMenu("DOTween/DOTween Callback")]
-    public class DOTweenCallback : ABSAnimationComponent
+    public partial class DOTweenCallback : MonoBehaviour
     {
         [SerializeField] public string id;
         [Min(0)] [SerializeField] public float delay;
@@ -14,15 +13,17 @@ namespace Dott
         [SerializeField] public bool autoGenerate = true;
         [SerializeField] public bool autoPlay = true;
 
+        private Tween tween;
+
         private void Awake()
         {
             if (autoGenerate)
             {
-                CreateTween(regenerateIfExists: false, autoPlay);
+                CreateTween(regenerateIfExists: false, andPlay: autoPlay);
             }
         }
 
-        public void CreateTween(bool regenerateIfExists, bool andPlay = true)
+        public Tween CreateTween(bool regenerateIfExists, bool andPlay = true)
         {
             if (tween != null)
             {
@@ -30,7 +31,7 @@ namespace Dott
                 {
                     if (!regenerateIfExists)
                     {
-                        return;
+                        return tween;
                     }
 
                     tween.Kill();
@@ -49,58 +50,8 @@ namespace Dott
             {
                 tween.Pause();
             }
+
+            return tween;
         }
-
-        #region DOTweenVisualManager dependencies (empty, not supported)
-
-        public override void DOPlay()
-        {
-        }
-
-        public override void DOPlayBackwards()
-        {
-        }
-
-        public override void DOPlayForward()
-        {
-        }
-
-        public override void DOPause()
-        {
-        }
-
-        public override void DOTogglePause()
-        {
-        }
-
-        public override void DORewind()
-        {
-        }
-
-        public override void DORestart()
-        {
-        }
-
-        public override void DORestart(bool fromHere)
-        {
-        }
-
-        public override void DOComplete()
-        {
-        }
-
-        public override void DOGotoAndPause(float time)
-        {
-        }
-
-        public override void DOGotoAndPlay(float time)
-        {
-        }
-
-        public override void DOKill()
-        {
-        }
-
-        #endregion
     }
 }
