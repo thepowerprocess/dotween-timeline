@@ -240,7 +240,7 @@ namespace Dott.Editor
             }
 
             var colorLine = new Rect(tweenRect.x + 1, tweenRect.y + tweenRect.height - 3, tweenRect.width - 2, 2);
-            Random.InitState((int)GlobalObjectId.GetGlobalObjectIdSlow(animation.Component).targetObjectId);
+            Random.InitState(animation.Component.GetInstanceID());
             var color = Colors.GetRandom();
             EditorGUI.DrawRect(colorLine, color.SetAlpha(0.6f * alphaMultiplier));
 
@@ -328,7 +328,7 @@ namespace Dott.Editor
 
         public static bool PlayButton(Rect rect)
         {
-            var content = EditorGUIUtility.IconContent("d_PlayButton On");
+            var content = EditorGUIUtility.IconContent("d_PlayButton");
             var position = rect.position + new Vector2(2, (HEADER_HEIGHT - PlayButtonSize.y) / 2);
             var buttonRect = new Rect(position, PlayButtonSize);
             var contentColor = GUI.contentColor;
