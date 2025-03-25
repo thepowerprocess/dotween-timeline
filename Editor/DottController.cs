@@ -55,21 +55,19 @@ namespace Dott.Editor
                 var tween = PreviewTween(animation);
                 if (tween != null)
                 {
+                    var tweenTime = time - animation.Delay;
                     if (tween is Sequence)
                     {
                         // Sequences have no real delay, so we don't need to subtract it
-                        var sequenceTime = time;
+                        tweenTime = time;
                         if (time < animation.Delay)
                         {
                             // Ensure time is 0 before the first child tween starts
                             // to prevent unexpected onRewind calls
-                            sequenceTime = 0;
+                            tweenTime = 0;
                         }
-
-                        tween.Goto(sequenceTime, andPlay: false);
                     }
 
-                    var tweenTime = time - animation.Delay;
                     tween.Goto(tweenTime, andPlay: false);
                 }
             }
