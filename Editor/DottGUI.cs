@@ -275,7 +275,7 @@ namespace Dott.Editor
         public static void Properties(SerializedObject serializedObject)
         {
             EditorGUILayout.Space(3f);
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("autoPlay"));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("autoOldWay"));
             serializedObject.ApplyModifiedProperties();
         }
 
