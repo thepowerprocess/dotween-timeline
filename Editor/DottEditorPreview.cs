@@ -56,20 +56,31 @@ namespace Dott.Editor
             for (var i = Tweens.Count - 1; i >= 0; i--)
             {
                 var tweenData = Tweens[i];
+                var tween = tweenData.Tween;
+
                 if (tweenData.IsFrom)
                 {
-                    tweenData.Tween.Complete();
+                    // Yes, this is a hack to rewind multiple "from" tweens for the same target
+                    tween.Rewind();
+                    tween.Complete();
                 }
                 else
                 {
-                    tweenData.Tween.Rewind();
+                    tween.Rewind();
                 }
 
-                tweenData.Tween.Kill();
+                tween.Kill();
             }
 
             Tweens.Clear();
 
+            QueuePlayerLoopUpdate();
+        }
+
+        public static void GoTo(float time)
+        {
+            CurrentTime = time;
+            DOTween.ManualUpdate(time, time);
             QueuePlayerLoopUpdate();
         }
 

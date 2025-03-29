@@ -10,11 +10,10 @@ namespace Dott.Editor
     public class DottController : IDisposable
     {
         private double startTime;
-        private float gotoTime;
         private IDOTweenAnimation[] currentPlayAnimations;
 
         public bool IsPlaying => DottEditorPreview.IsPlaying;
-        public float ElapsedTime => Paused ? gotoTime : (float)(DottEditorPreview.CurrentTime - startTime);
+        public float ElapsedTime => (float)(DottEditorPreview.CurrentTime - startTime);
         public bool Paused { get; private set; }
 
         public bool Loop
@@ -48,31 +47,9 @@ namespace Dott.Editor
         {
             DottEditorPreview.Stop();
 
-            gotoTime = time;
-            var sortedAnimations = Sort(animations);
-            foreach (var animation in sortedAnimations)
-            {
-                var tween = PreviewTween(animation);
-                if (tween != null)
-                {
-                    var tweenTime = time - animation.Delay;
-                    if (tween is Sequence)
-                    {
-                        // Sequences have no real delay, so we don't need to subtract it
-                        tweenTime = time;
-                        if (time < animation.Delay)
-                        {
-                            // Ensure time is 0 before the first child tween starts
-                            // to prevent unexpected onRewind calls
-                            tweenTime = 0;
-                        }
-                    }
-
-                    tween.Goto(tweenTime, andPlay: false);
-                }
-            }
-
-            DottEditorPreview.QueuePlayerLoopUpdate();
+            Sort(animations).ForEach(PreviewTween);
+            DottEditorPreview.GoTo(time);
+            startTime = 0;
         }
 
         public void Stop()
