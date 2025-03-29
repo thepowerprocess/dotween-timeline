@@ -10,18 +10,8 @@ namespace Dott
         [SerializeField] public string id;
         [Min(0)] [SerializeField] public float delay;
         [SerializeField] public UnityEvent onCallback;
-        [SerializeField] public bool autoGenerate = true;
-        [SerializeField] public bool autoPlay = true;
 
         private Tween tween;
-
-        private void Awake()
-        {
-            if (autoGenerate)
-            {
-                CreateTween(regenerateIfExists: false, andPlay: autoPlay);
-            }
-        }
 
         public Tween CreateTween(bool regenerateIfExists, bool andPlay = true)
         {

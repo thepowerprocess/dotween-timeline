@@ -32,8 +32,6 @@ namespace Dott.Editor
                 view.DrawInspector(selection.GetAnimationEditor());
             }
 
-            view.DrawProperties(serializedObject);
-
             if (controller.Paused && Event.current.type == EventType.Repaint)
             {
                 controller.GoTo(animations, controller.ElapsedTime);

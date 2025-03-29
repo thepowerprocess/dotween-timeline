@@ -272,13 +272,6 @@ namespace Dott.Editor
             EditorGUI.DrawRect(verticalLine, Color.gray);
         }
 
-        public static void Properties(SerializedObject serializedObject)
-        {
-            EditorGUILayout.Space(3f);
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("autoOldWay"));
-            serializedObject.ApplyModifiedProperties();
-        }
-
         public static bool AddButton(Rect timelineRect)
         {
             var buttonSize = new Vector2(28, 24);

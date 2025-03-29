@@ -111,11 +111,6 @@ namespace Dott.Editor
             DottGUI.Inspector(editor);
         }
 
-        public void DrawProperties(SerializedObject serializedObject)
-        {
-            DottGUI.Properties(serializedObject);
-        }
-
         private static float CalculateTimeScale(IDOTweenAnimation[] animations)
         {
             var maxTime = animations.Length > 0

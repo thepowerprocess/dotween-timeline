@@ -7,29 +7,32 @@ namespace Dott
     [AddComponentMenu("DOTween/DOTween Timeline")]
     public class DOTweenTimeline : MonoBehaviour
     {
-        [SerializeField] private bool autoOldWay = true;
-
         [CanBeNull] public Sequence Sequence { get; private set; }
 
+        // Do not override the onKill callback because it is used internally to reset the Sequence
         public Sequence Play()
         {
-            GenerateSequence();
+            TryGenerateSequence();
             return Sequence.Play();
         }
 
-        public void Pause() => Sequence.Pause();
+        // Wrapper for UnityEvent (requires void return type)
+        public void DOPlay() => Play();
 
-        public void Restart() => Sequence.Restart();
+        public Sequence Restart()
+        {
+            TryGenerateSequence();
+            Sequence.Restart();
+            return Sequence;
+        }
 
-        public void Rewind() => Sequence.Rewind();
-
-        public void TogglePause() => Sequence.TogglePause();
-
-        private void GenerateSequence()
+        private void TryGenerateSequence()
         {
             if (Sequence != null) { return; }
 
             Sequence = DOTween.Sequence();
+            Sequence.SetLink(gameObject, LinkBehaviour.KillOnDestroy);
+            Sequence.OnKill(() => Sequence = null);
             var components = GetComponents<MonoBehaviour>();
             foreach (var component in components)
             {
@@ -48,18 +51,17 @@ namespace Dott
             }
         }
 
+        private void OnDestroy()
+        {
+            // Already handled by SetLink, but needed to avoid warnings from children DOTweenAnimation.OnDestroy
+            Sequence?.Kill();
+        }
+
         private void OnValidate()
         {
-            if (autoOldWay) { return; }
-
             foreach (var doTweenAnimation in GetComponents<DOTweenAnimation>())
             {
                 doTweenAnimation.autoGenerate = false;
-            }
-
-            foreach (var doTweenCallback in GetComponents<DOTweenCallback>())
-            {
-                doTweenCallback.autoGenerate = false;
             }
         }
     }
