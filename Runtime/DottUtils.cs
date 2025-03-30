@@ -16,7 +16,6 @@ namespace Dott
                 return cachedTexture;
             }
 
-            Debug.Log($"Creating texture from base64 string: {source[^10]}...");
             var bytes = Convert.FromBase64String(source);
             var texture = new Texture2D(1, 1);
             texture.LoadImage(bytes);
