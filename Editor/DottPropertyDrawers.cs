@@ -48,15 +48,17 @@ namespace Dott.Editor
 
             var controlRect = EditorGUI.PrefixLabel(position, label);
             var halfWidth = controlRect.width / 2;
+            const int halfSpacing = 1;
 
-            var popupRect = controlRect.SetWidth(halfWidth);
+            var popupRect = controlRect.SetWidth(halfWidth - halfSpacing);
             var index = DrawIdPopup(popupRect, components, selected);
             if (index >= 0)
             {
                 property.objectReferenceValue = components[index];
             }
 
-            var selectedRect = controlRect.ShiftX(halfWidth);
+            var selectedRect = controlRect;
+            selectedRect.xMin += halfWidth + halfSpacing;
             EditorGUI.PropertyField(selectedRect, property, GUIContent.none);
 
             EditorGUI.EndProperty();
