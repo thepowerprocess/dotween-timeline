@@ -69,7 +69,7 @@ namespace Dott.Editor
 
             view.TimeDragStart -= controller.Stop;
             view.TimeDragEnd -= OnTimeDragEnd;
-            view.TimeDrag += GoTo;
+            view.TimeDrag -= GoTo;
 
             view.AddClicked -= AddAnimation;
             view.CallbackClicked -= AddCallback;
