@@ -264,12 +264,38 @@ namespace Dott.Editor
 
         public static void Inspector(UnityEditor.Editor editor)
         {
-            EditorGUILayout.Space();
-            GUILayout.Label("Inspector", EditorStyles.boldLabel);
-            editor.OnInspectorGUI();
+            var headerStyle = new GUIStyle(EditorStyles.boldLabel)
+            {
+                alignment = TextAnchor.MiddleLeft
+            };
 
-            var verticalLine = EditorGUILayout.GetControlRect(GUILayout.Height(1));
-            EditorGUI.DrawRect(verticalLine, Color.gray);
+            EditorGUILayout.Space();
+
+            Splitter(new Color(0.12f, 0.12f, 0.12f, 1.333f));
+
+            var backgroundRect = GUILayoutUtility.GetRect(1f, EditorGUIUtility.singleLineHeight);
+            var labelRect = backgroundRect;
+            backgroundRect = ToFullWidth(backgroundRect);
+            EditorGUI.DrawRect(backgroundRect, new Color(0.1f, 0.1f, 0.1f, 0.2f));
+            EditorGUI.LabelField(labelRect, "Inspector", headerStyle);
+
+            Splitter(new Color(0.19f, 0.19f, 0.19f, 1.333f));
+
+            editor.OnInspectorGUI();
+        }
+
+        private static void Splitter(Color color)
+        {
+            var rect = GUILayoutUtility.GetRect(1f, 1f);
+            rect = ToFullWidth(rect);
+            EditorGUI.DrawRect(rect, color);
+        }
+
+        private static Rect ToFullWidth(Rect rect)
+        {
+            rect.xMin = 0f;
+            rect.width += 4f;
+            return rect;
         }
 
         public static bool AddButton(Rect timelineRect)
