@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
+using DG.DemiEditor;
 using JetBrains.Annotations;
-using UnityEditor;
 using UnityEngine;
 
 namespace Dott.Editor
@@ -59,13 +59,20 @@ namespace Dott.Editor
             if (isPlaying || isPaused)
             {
                 var time = currentPlayingTime * timeScale;
-                DottGUI.TimeVerticalLine(tweensRect, time);
+                var verticalRect = timeRect.Add(tweensRect);
+                DottGUI.TimeVerticalLine(verticalRect, time, isPaused);
+
+                if (isPaused)
+                {
+                    DottGUI.PlayheadLabel(timeRect, time);
+                }
             }
 
             if (isTimeDragging)
             {
                 var time = DottGUI.GetScaledTimeUnderMouse(timeRect);
-                DottGUI.TimeVerticalLine(tweensRect, time);
+                DottGUI.TimeVerticalLine(timeRect.Add(tweensRect), time, underLabel: true);
+                DottGUI.PlayheadLabel(timeRect, time);
 
                 if (Event.current.type is EventType.MouseDrag or EventType.MouseDown)
                 {

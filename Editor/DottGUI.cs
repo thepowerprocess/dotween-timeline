@@ -16,6 +16,7 @@ namespace Dott.Editor
         private static readonly Vector2 PlayButtonSize = new(44, 24);
         private static readonly Vector2 LoopToggleSize = new(24, 24);
         private static readonly Vector2 FreezeToggleSize = new(24, 24);
+        private static readonly Color PlayheadColor = new(0.19f, 0.44f, 0.89f);
 
         private static readonly Color[] Colors =
         {
@@ -67,6 +68,7 @@ namespace Dott.Editor
 
             var bottomLine = new Rect(rect.x, rect.y + rect.height, rect.width, 1);
             EditorGUI.DrawRect(bottomLine, Color.black);
+            EditorGUIUtility.AddCursorRect(rect, MouseCursor.Link);
 
             ProcessDragEvents(rect, ref isDragging, start, end);
 
@@ -87,6 +89,32 @@ namespace Dott.Editor
                     end?.Invoke();
                     break;
             }
+        }
+
+        public static void PlayheadLabel(Rect timeRect, float time)
+        {
+            var labelStyle = new GUIStyle(GUI.skin.label)
+            {
+                fontSize = 9,
+                fontStyle = FontStyle.Bold,
+                normal = { textColor = Color.white },
+                hover = { textColor = Color.white },
+                alignment = TextAnchor.MiddleCenter
+            };
+
+            var position = new Vector2(timeRect.x + time * timeRect.width, timeRect.y);
+            var labelContent = new GUIContent(time.ToString("0.00"));
+
+            const int yShift = 1;
+            var labelRect = new Rect(position.x, position.y + yShift, 32, timeRect.height - yShift * 2);
+            labelRect.x -= labelRect.width * 0.5f;
+            const int maxXShift = 4;
+            labelRect.x = Mathf.Clamp(labelRect.x, timeRect.x - maxXShift, timeRect.xMax - labelRect.width + maxXShift);
+
+            var labelBackground = new Rect(labelRect.x, labelRect.y, labelRect.width, labelRect.height);
+            RoundRect(labelBackground, PlayheadColor, borderRadius: 8);
+
+            GUI.Label(labelRect, labelContent, labelStyle);
         }
 
         public static float GetScaledTimeUnderMouse(Rect timeRect)
@@ -256,10 +284,12 @@ namespace Dott.Editor
             return rowRect.x + time * timeScale * rowRect.width;
         }
 
-        public static void TimeVerticalLine(Rect rect, float time)
+        public static void TimeVerticalLine(Rect rect, float time, bool underLabel)
         {
-            var verticalLine = new Rect(rect.x + time * rect.width, rect.y, 1, rect.height);
-            EditorGUI.DrawRect(verticalLine, Color.white);
+            // some extra shift to nice look on borders
+            var shift = underLabel ? 10 : 1;
+            var verticalLine = new Rect(rect.x + time * rect.width, rect.y + shift, 1, rect.height - shift);
+            EditorGUI.DrawRect(verticalLine, PlayheadColor);
         }
 
         public static void Inspector(UnityEditor.Editor editor)
