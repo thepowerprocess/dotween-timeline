@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using DG.DemiEditor;
 using DG.Tweening;
 using UnityEditor;
@@ -9,27 +11,38 @@ namespace Dott.Editor
     [CustomPropertyDrawer(typeof(DOTweenAnimation))]
     public class DOTweenAnimationPropertyDrawer : DOTweenComponentPropertyDrawer<DOTweenAnimation>
     {
-        protected override string GetId(DOTweenAnimation component) => component.id;
+        private readonly Dictionary<DOTweenAnimation, IDOTweenAnimation> adapters = new();
+
+        protected override string GetId(DOTweenAnimation component)
+        {
+            if (!adapters.ContainsKey(component))
+            {
+                adapters[component] = DottAnimation.FromComponent(component);
+            }
+
+            return adapters[component].Label;
+        }
     }
 
-    [CustomPropertyDrawer(typeof(DOTweenCallback))]
-    public class DOTweenCallbackPropertyDrawer : DOTweenComponentPropertyDrawer<DOTweenCallback>
+    [CustomPropertyDrawer(typeof(IDOTweenAnimation), true)]
+    public class DOTweenCallbackPropertyDrawer : DOTweenComponentPropertyDrawer<IDOTweenAnimation>
     {
-        protected override string GetId(DOTweenCallback component) => component.id;
+        protected override string GetId(IDOTweenAnimation component) => component.Label;
     }
 
-    public abstract class DOTweenComponentPropertyDrawer<T> : PropertyDrawer where T : MonoBehaviour
+    public abstract class DOTweenComponentPropertyDrawer<T> : PropertyDrawer
     {
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
-            var selected = property.objectReferenceValue as T;
+            var selected = property.objectReferenceValue as Component;
             if (selected == null)
             {
                 DrawDefault(position, property, label);
                 return;
             }
 
-            var components = selected.GetComponents<T>();
+            var type = selected.GetType();
+            var components = selected.GetComponents(type);
             if (components.Length == 1)
             {
                 DrawDefault(position, property, label);
@@ -59,12 +72,22 @@ namespace Dott.Editor
             }
         }
 
-        private int DrawIdPopup(Rect popupRect, T[] options, T selected)
+        private int DrawIdPopup(Rect popupRect, Component[] options, Component selected)
         {
-            var ids = options.Select((component, i) => $"{i}: {GetId(component)}").ToArray();
+            var ids = options.Select((component, i) => $"{i}: {GetPopupOption(component)}").ToArray();
             var index = options.IndexOf(selected);
             index = EditorGUI.Popup(popupRect, index, ids);
             return index;
+        }
+
+        private string GetPopupOption(Component component)
+        {
+            if (component is not T typedComponent) { return string.Empty; }
+
+            var id = GetId(typedComponent);
+            id = Regex.Replace(id, "/", " ");
+            id = Regex.Replace(id, "<[^>]+>", string.Empty);
+            return id;
         }
 
         protected abstract string GetId(T component);
