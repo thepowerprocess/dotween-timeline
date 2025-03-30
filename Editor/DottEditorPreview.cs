@@ -52,6 +52,7 @@ namespace Dott.Editor
         {
             IsPlaying = false;
             EditorApplication.update -= Update;
+            CurrentTime = 0;
 
             for (var i = Tweens.Count - 1; i >= 0; i--)
             {

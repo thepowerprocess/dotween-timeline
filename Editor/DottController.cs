@@ -37,9 +37,10 @@ namespace Dott.Editor
         {
             currentPlayAnimations = animations;
 
-            Sort(animations).ForEach(PreviewTween);
+            var shift = (float)DottEditorPreview.CurrentTime;
+            GoTo(animations, shift);
             DottEditorPreview.Start();
-            startTime = DottEditorPreview.CurrentTime;
+            startTime = DottEditorPreview.CurrentTime - shift;
             Paused = false;
         }
 
