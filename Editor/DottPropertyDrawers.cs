@@ -43,11 +43,6 @@ namespace Dott.Editor
 
             var type = selected.GetType();
             var components = selected.GetComponents(type);
-            if (components.Length == 1)
-            {
-                DrawDefault(position, property, label);
-                return;
-            }
 
             EditorGUI.BeginProperty(position, label, property);
 
@@ -74,7 +69,8 @@ namespace Dott.Editor
 
         private int DrawIdPopup(Rect popupRect, Component[] options, Component selected)
         {
-            var ids = options.Select((component, i) => $"{i}: {GetPopupOption(component)}").ToArray();
+            var prefix = options.Length > 1;
+            var ids = options.Select((component, i) => prefix ? $"{i}: {GetPopupOption(component)}" : GetPopupOption(component)).ToArray();
             var index = options.IndexOf(selected);
             index = EditorGUI.Popup(popupRect, index, ids);
             return index;
