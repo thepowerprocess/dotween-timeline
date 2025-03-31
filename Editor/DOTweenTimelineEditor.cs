@@ -158,13 +158,24 @@ namespace Dott.Editor
 
         private void Duplicate()
         {
+            Undo.SetCurrentGroupName($"Duplicate {selection.Animation.Label}");
+
             var source = selection.Animation.Component;
 
-            var dest = source.gameObject.AddComponent(source.GetType());
+            var dest = Undo.AddComponent(source.gameObject, source.GetType());
             EditorUtility.CopySerialized(source, dest);
 
             var animation = DottAnimation.FromComponent(dest);
             selection.Set(animation);
+
+            var components = source.GetComponents<Component>();
+            var targetIndex = Array.IndexOf(components, source) + 1;
+            var index = Array.IndexOf(components, dest);
+            while (index > targetIndex)
+            {
+                UnityEditorInternal.ComponentUtility.MoveComponentUp(dest);
+                index--;
+            }
         }
 
         private void ToggleLoop(bool value)
