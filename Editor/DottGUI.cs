@@ -249,13 +249,13 @@ namespace Dott.Editor
 
             RoundRect(tweenRect, Color.gray.SetAlpha(0.3f * alphaMultiplier), borderRadius: 4);
 
+            var mouseHover = tweenRect.Contains(Event.current.mousePosition);
             if (isSelected)
             {
                 RoundRect(tweenRect, Color.white.SetAlpha(0.9f * alphaMultiplier), borderRadius: 4, borderWidth: 2);
             }
             else
             {
-                var mouseHover = tweenRect.Contains(Event.current.mousePosition);
                 if (mouseHover)
                 {
                     RoundRect(tweenRect, Color.white.SetAlpha(0.9f), borderRadius: 4, borderWidth: 1);
@@ -267,13 +267,20 @@ namespace Dott.Editor
             var color = Colors.GetRandom();
             EditorGUI.DrawRect(colorLine, color.SetAlpha(0.6f * alphaMultiplier));
 
-            var label = animation.Label;
+            var label = new GUIContent(animation.Label);
             var style = new GUIStyle(GUI.skin.label)
             {
                 fontStyle = FontStyle.Bold, fontSize = 10,
                 alignment = TextAnchor.MiddleCenter,
                 normal = { textColor = Color.white.SetAlpha(alphaMultiplier) }
             };
+            var labelWidth = style.CalcSize(label).x;
+            if (labelWidth > tweenRect.width)
+            {
+                label.tooltip = animation.Label;
+                style.alignment = mouseHover ? TextAnchor.MiddleRight : TextAnchor.MiddleLeft;
+            }
+
             GUI.Label(tweenRect, label, style);
 
             return tweenRect;
