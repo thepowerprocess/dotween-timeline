@@ -111,6 +111,15 @@ namespace Dott.Editor
             {
                 FreezeFrameClicked?.Invoke(freezeFrameResult);
             }
+
+            if (selected != null && Event.current.type == EventType.MouseDown)
+            {
+                if (rect.Contains(Event.current.mousePosition))
+                {
+                    TweenSelected?.Invoke(null);
+                    Event.current.Use();
+                }
+            }
         }
 
         public void DrawInspector(UnityEditor.Editor editor)

@@ -77,16 +77,19 @@ namespace Dott.Editor
 
         private static void ProcessDragEvents(Rect rect, ref bool isDragging, Action start, Action end)
         {
-            switch (Event.current.type)
+            var current = Event.current;
+            switch (current.type)
             {
-                case EventType.MouseDown when !isDragging && rect.Contains(Event.current.mousePosition):
+                case EventType.MouseDown when !isDragging && rect.Contains(current.mousePosition):
                     isDragging = true;
                     start?.Invoke();
+                    current.Use();
                     break;
 
                 case EventType.MouseUp when isDragging:
                     isDragging = false;
                     end?.Invoke();
+                    current.Use();
                     break;
             }
         }
@@ -148,11 +151,6 @@ namespace Dott.Editor
                     startDrag = animation;
                     tweenSelected?.Invoke(animation);
                 }
-            }
-
-            if (startDrag == null && Event.current.type == EventType.MouseDown && rect.Contains(Event.current.mousePosition))
-            {
-                tweenSelected?.Invoke(null);
             }
 
             return rect;
