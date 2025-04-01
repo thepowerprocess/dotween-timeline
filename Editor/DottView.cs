@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using DG.DemiEditor;
+using DG.Tweening;
 using JetBrains.Annotations;
 using UnityEngine;
 
@@ -10,6 +11,7 @@ namespace Dott.Editor
     {
         private bool isTimeDragging;
         private bool isTweenDragging;
+        private static readonly AddMoreItem[] AddMoreItems = CreateAddMoreItems();
 
         public event Action TimeDragStart;
         public event Action TimeDragEnd;
@@ -17,7 +19,7 @@ namespace Dott.Editor
         public event Action<IDOTweenAnimation> TweenSelected;
         public event Action<float> TweenDrag;
         public event Action AddClicked;
-        public event Action CallbackClicked;
+        public event Action<Type> AddMore;
         public event Action RemoveClicked;
         public event Action DuplicateClicked;
         public event Action StopClicked;
@@ -41,10 +43,7 @@ namespace Dott.Editor
                 AddClicked?.Invoke();
             }
 
-            if (DottGUI.CallbackButton(rect))
-            {
-                CallbackClicked?.Invoke();
-            }
+            DottGUI.AddMoreButton(rect, AddMoreItems, item => AddMore?.Invoke(item.Type));
 
             if (selected != null && DottGUI.RemoveButton(rect))
             {
@@ -133,6 +132,31 @@ namespace Dott.Editor
                 ? animations.Max(animation => animation.Delay + animation.Duration * Mathf.Max(1, animation.Loops))
                 : 1f;
             return 1f / maxTime;
+        }
+
+        private static AddMoreItem[] CreateAddMoreItems()
+        {
+            var types = AppDomain.CurrentDomain.GetAssemblies()
+                .SelectMany(assembly => assembly.GetExportedTypes())
+                .Where(type => type.IsClass && !type.IsAbstract && typeof(IDOTweenAnimation).IsAssignableFrom(type))
+                .ToArray();
+
+            return types
+                .Select((type, _) => new AddMoreItem(new GUIContent($"Add {type.Name.Replace("DOTween", "")}"), type))
+                .Prepend(new AddMoreItem(new GUIContent("Add Tween"), typeof(DOTweenAnimation)))
+                .ToArray();
+        }
+
+        public struct AddMoreItem
+        {
+            public readonly GUIContent Content;
+            public readonly Type Type;
+
+            public AddMoreItem(GUIContent content, Type type)
+            {
+                Content = content;
+                Type = type;
+            }
         }
     }
 }

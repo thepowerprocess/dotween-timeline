@@ -335,26 +335,45 @@ namespace Dott.Editor
 
         public static bool AddButton(Rect timelineRect)
         {
-            var buttonSize = new Vector2(28, 24);
-            var position = new Vector2(timelineRect.x + (BOTTOM_HEIGHT - buttonSize.y) / 2, timelineRect.y + timelineRect.height - BOTTOM_HEIGHT + (BOTTOM_HEIGHT - buttonSize.y) / 2);
-            var buttonRect = new Rect(position, buttonSize);
+            var buttonRect = CalculateAddButtonRect(timelineRect);
             var image = Resources.Load<Texture>("dotween.timeline.add.tween");
             var content = new GUIContent(image) { tooltip = "Add tween" };
-            return GUI.Button(buttonRect, content);
+            var style = new GUIStyle(EditorStyles.miniButtonLeft) { fixedHeight = 0 };
+            return GUI.Button(buttonRect, content, style);
         }
 
-        public static bool CallbackButton(Rect timelineRect)
+        private static Rect CalculateAddButtonRect(Rect timelineRect)
         {
-            var buttonSize = new Vector2(22, 24);
-            var position = new Vector2(timelineRect.x + (BOTTOM_HEIGHT - buttonSize.y) / 2 + 28 + 2, timelineRect.y + timelineRect.height - BOTTOM_HEIGHT + (BOTTOM_HEIGHT - buttonSize.y) / 2);
-            var buttonRect = new Rect(position, buttonSize);
+            var buttonSize = new Vector2(32, 24);
+            var position = new Vector2(timelineRect.x + (BOTTOM_HEIGHT - buttonSize.y) / 2, timelineRect.y + timelineRect.height - BOTTOM_HEIGHT + (BOTTOM_HEIGHT - buttonSize.y) / 2);
+            return new Rect(position, buttonSize);
+        }
+
+        public static void AddMoreButton(Rect timelineRect, DottView.AddMoreItem[] items, Action<DottView.AddMoreItem> clicked)
+        {
+            const float buttonWidth = 20;
+            var addButtonRect = CalculateAddButtonRect(timelineRect);
+            var buttonRect = addButtonRect.ShiftX(addButtonRect.width).SetWidth(buttonWidth);
+            var dropDrownIcon = EditorGUIUtility.IconContent("icon dropdown");
+
+            var style = new GUIStyle(EditorStyles.miniButtonRight) { fixedHeight = 0 };
             var backgroundColor = GUI.backgroundColor;
             GUI.backgroundColor = backgroundColor.SetAlpha(0.55f);
-            var content = EditorGUIUtility.IconContent("d_Animation.AddEvent");
-            content.tooltip = "Add callback";
-            var result = GUI.Button(buttonRect, content);
+            var result = EditorGUI.DropdownButton(buttonRect, dropDrownIcon, FocusType.Passive, style);
             GUI.backgroundColor = backgroundColor;
-            return result;
+
+            if (!result)
+            {
+                return;
+            }
+
+            var menu = new GenericMenu();
+            foreach (var item in items)
+            {
+                menu.AddItem(item.Content, false, userData => clicked?.Invoke((DottView.AddMoreItem)userData), item);
+            }
+
+            menu.DropDown(addButtonRect.ShiftX(-4));
         }
 
         public static bool RemoveButton(Rect timelineRect)

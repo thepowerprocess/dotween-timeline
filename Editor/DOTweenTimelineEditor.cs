@@ -52,7 +52,7 @@ namespace Dott.Editor
             view.TimeDrag += GoTo;
 
             view.AddClicked += AddAnimation;
-            view.CallbackClicked += AddCallback;
+            view.AddMore += AddMore;
             view.RemoveClicked += Remove;
             view.DuplicateClicked += Duplicate;
 
@@ -72,7 +72,7 @@ namespace Dott.Editor
             view.TimeDrag -= GoTo;
 
             view.AddClicked -= AddAnimation;
-            view.CallbackClicked -= AddCallback;
+            view.AddMore -= AddMore;
             view.RemoveClicked -= Remove;
             view.DuplicateClicked -= Duplicate;
 
@@ -135,17 +135,17 @@ namespace Dott.Editor
 
         private void AddAnimation()
         {
-            Add<DOTweenAnimation>(Timeline);
+            Add(Timeline, typeof(DOTweenAnimation));
         }
 
-        private void AddCallback()
+        private void AddMore(Type type)
         {
-            Add<DOTweenCallback>(Timeline);
+            Add(Timeline, type);
         }
 
-        private void Add<T>(DOTweenTimeline timeline) where T : Component
+        private void Add(DOTweenTimeline timeline, Type type)
         {
-            var component = ObjectFactory.AddComponent<T>(timeline.gameObject);
+            var component = ObjectFactory.AddComponent(timeline.gameObject, type);
             var animation = DottAnimation.FromComponent(component);
             selection.Set(animation);
         }
