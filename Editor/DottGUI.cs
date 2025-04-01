@@ -273,13 +273,17 @@ namespace Dott.Editor
                 normal = { textColor = Color.white.SetAlpha(alphaMultiplier) }
             };
             var labelWidth = style.CalcSize(label).x;
-            if (labelWidth > tweenRect.width)
+            var labelRect = tweenRect;
+            if (labelWidth > labelRect.width)
             {
                 label.tooltip = animation.Label;
                 style.alignment = mouseHover ? TextAnchor.MiddleRight : TextAnchor.MiddleLeft;
+
+                // just to make it look nice
+                labelRect.xMin += 4f;
             }
 
-            GUI.Label(tweenRect, label, style);
+            GUI.Label(labelRect, label, style);
 
             return tweenRect;
         }
