@@ -137,6 +137,7 @@ namespace Dott.Editor
         private static AddMoreItem[] CreateAddMoreItems()
         {
             var types = AppDomain.CurrentDomain.GetAssemblies()
+                .Where(assembly => !assembly.IsDynamic)
                 .SelectMany(assembly => assembly.GetExportedTypes())
                 .Where(type => type.IsClass && !type.IsAbstract && typeof(IDOTweenAnimation).IsAssignableFrom(type))
                 .ToArray();
