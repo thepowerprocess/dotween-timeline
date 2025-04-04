@@ -135,6 +135,7 @@ namespace Dott.Editor
 
             var vector3Property = current.EndValueVector3Prop;
             var floatProperty = current.EndValueFloatProp;
+            var colorProperty = current.EndValueColorProp;
 
             switch (current.PropertyType)
             {
@@ -157,6 +158,10 @@ namespace Dott.Editor
                     floatProperty.floatValue = Mathf.Clamp(floatProperty.floatValue, 0f, 1f);
                     break;
                 }
+
+                case DOTweenFrame.FrameProperty.PropertyType.Color:
+                    EditorGUILayout.PropertyField(colorProperty, new GUIContent("Color"));
+                    break;
 
                 case DOTweenFrame.FrameProperty.PropertyType.None:
                     break;
@@ -182,6 +187,7 @@ namespace Dott.Editor
 
                 case DOTweenFrame.FrameProperty.PropertyType.None:
                 case DOTweenFrame.FrameProperty.PropertyType.Fade:
+                case DOTweenFrame.FrameProperty.PropertyType.Color:
                     break;
 
                 default:
@@ -246,6 +252,13 @@ namespace Dott.Editor
                     return new Component[] { graphic, canvasGroup }.Where(c => c != null).ToArray();
                 }
 
+                case DOTweenFrame.FrameProperty.PropertyType.Color:
+                {
+                    var graphic = targetGameObject.GetComponent<Graphic>();
+                    var camera = targetGameObject.GetComponent<Camera>();
+                    return new Component[] { graphic, camera }.Where(c => c != null).ToArray();
+                }
+
                 case DOTweenFrame.FrameProperty.PropertyType.None:
                 default:
                     return Array.Empty<Component>();
@@ -264,6 +277,7 @@ namespace Dott.Editor
 
             public readonly SerializedProperty EndValueVector3Prop;
             public readonly SerializedProperty EndValueFloatProp;
+            public readonly SerializedProperty EndValueColorProp;
             public readonly SerializedProperty OptionalBoolProp;
 
             public readonly DOTweenFrame.FrameProperty.PropertyType PropertyType => (DOTweenFrame.FrameProperty.PropertyType)PropertyTypeProp.intValue;
@@ -282,6 +296,7 @@ namespace Dott.Editor
 
                 EndValueVector3Prop = property.FindPropertyRelative("EndValueVector3");
                 EndValueFloatProp = property.FindPropertyRelative("EndValueFloat");
+                EndValueColorProp = property.FindPropertyRelative("EndValueColor");
                 OptionalBoolProp = property.FindPropertyRelative("OptionalBool");
             }
         }

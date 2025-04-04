@@ -21,6 +21,7 @@ namespace Dott
                 FrameProperty.PropertyType.LocalPosition => new MoveScope(property, isLocal: true),
                 FrameProperty.PropertyType.Scale => new ScaleScope(property),
                 FrameProperty.PropertyType.Fade => new FadeScope(property),
+                FrameProperty.PropertyType.Color => new ColorScope(property),
 
                 _ => throw new System.NotImplementedException()
             };
@@ -159,6 +160,43 @@ namespace Dott
                     case CanvasGroup canvasGroup:
                         previousValue = canvasGroup.alpha;
                         canvasGroup.alpha = value;
+                        break;
+
+                    default:
+                        throw new System.NotImplementedException();
+                }
+            }
+        }
+
+        private class ColorScope : PropertyScope
+        {
+            private Color startValue;
+
+            public ColorScope(FrameProperty property) : base(property) { }
+
+            public override void Open()
+            {
+                var endValue = Property.EndValueColor;
+                Apply(endValue, out startValue);
+            }
+
+            public override void Close()
+            {
+                Apply(startValue, out _);
+            }
+
+            private void Apply(Color color, out Color previousValue)
+            {
+                switch (Property.Target)
+                {
+                    case Graphic graphic:
+                        previousValue = graphic.color;
+                        graphic.color = color;
+                        break;
+
+                    case Camera camera:
+                        previousValue = camera.backgroundColor;
+                        camera.backgroundColor = color;
                         break;
 
                     default:

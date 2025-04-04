@@ -13,7 +13,7 @@ namespace Dott
                 None,
                 Position, LocalPosition,
                 Scale,
-                Fade
+                Fade, Color
             }
 
             public GameObject TargetGameObject;
@@ -23,6 +23,7 @@ namespace Dott
 
             public Vector3 EndValueVector3;
             public float EndValueFloat;
+            public Color EndValueColor;
 
             public bool OptionalBool;
         }

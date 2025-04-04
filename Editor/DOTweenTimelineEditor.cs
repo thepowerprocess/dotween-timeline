@@ -47,7 +47,6 @@ namespace Dott.Editor
             view.TweenSelected += OnTweenSelected;
             view.TweenDrag += DragSelectedAnimation;
 
-            view.TimeDragStart += controller.Stop;
             view.TimeDragEnd += OnTimeDragEnd;
             view.TimeDrag += GoTo;
 
@@ -67,7 +66,6 @@ namespace Dott.Editor
             view.TweenSelected -= OnTweenSelected;
             view.TweenDrag -= DragSelectedAnimation;
 
-            view.TimeDragStart -= controller.Stop;
             view.TimeDragEnd -= OnTimeDragEnd;
             view.TimeDrag -= GoTo;
 

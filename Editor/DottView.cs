@@ -13,7 +13,6 @@ namespace Dott.Editor
         private bool isTweenDragging;
         private static readonly AddMoreItem[] AddMoreItems = CreateAddMoreItems();
 
-        public event Action TimeDragStart;
         public event Action TimeDragEnd;
         public event Action<float> TimeDrag;
         public event Action<IDOTweenAnimation> TweenSelected;
@@ -35,7 +34,8 @@ namespace Dott.Editor
             DottGUI.Header(rect);
 
             var timeScale = CalculateTimeScale(animations);
-            var timeRect = DottGUI.Time(rect, timeScale, ref isTimeDragging, TimeDragStart, TimeDragEnd);
+            var timeDragStarted = false;
+            var timeRect = DottGUI.Time(rect, timeScale, ref isTimeDragging, () => timeDragStarted = true, TimeDragEnd);
             var tweensRect = DottGUI.Tweens(rect, animations, timeScale, selected, ref isTweenDragging, TweenSelected);
 
             if (DottGUI.AddButton(rect))
@@ -73,7 +73,7 @@ namespace Dott.Editor
                 DottGUI.TimeVerticalLine(timeRect.Add(tweensRect), time, underLabel: true);
                 DottGUI.PlayheadLabel(timeRect, time);
 
-                if (Event.current.type is EventType.MouseDrag or EventType.MouseDown)
+                if (Event.current.type is EventType.MouseDrag || timeDragStarted)
                 {
                     TimeDrag?.Invoke(time / timeScale);
                 }
