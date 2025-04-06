@@ -1,5 +1,8 @@
 using System;
 using System.Linq;
+using DG.DemiEditor;
+using DG.Tweening;
+using JetBrains.Annotations;
 using UnityEngine;
 
 namespace Dott.Editor
@@ -8,21 +11,22 @@ namespace Dott.Editor
     {
         private bool isTimeDragging;
         private bool isTweenDragging;
+        private static readonly AddMoreItem[] AddMoreItems = CreateAddMoreItems();
 
-        public event Action TimeDragStart;
         public event Action TimeDragEnd;
         public event Action<float> TimeDrag;
-        public event Action<DottAnimation> TweenSelected;
+        public event Action<IDOTweenAnimation> TweenSelected;
         public event Action<float> TweenDrag;
         public event Action AddClicked;
-        public event Action CallbackClicked;
+        public event Action<Type> AddMore;
         public event Action RemoveClicked;
         public event Action DuplicateClicked;
         public event Action StopClicked;
         public event Action PlayClicked;
         public event Action<bool> LoopToggled;
+        public event Action<bool> FreezeFrameClicked;
 
-        public void DrawTimeline(DottAnimation[] animations, DottAnimation selected, bool isPlaying, float currentPlayingTime, bool isLooping)
+        public void DrawTimeline(IDOTweenAnimation[] animations, [CanBeNull] IDOTweenAnimation selected, bool isPlaying, float currentPlayingTime, bool isLooping, bool isFreezeFrame, bool isPaused)
         {
             var rect = DottGUI.GetTimelineControlRect(animations.Length);
 
@@ -30,7 +34,8 @@ namespace Dott.Editor
             DottGUI.Header(rect);
 
             var timeScale = CalculateTimeScale(animations);
-            var timeRect = DottGUI.Time(rect, timeScale, ref isTimeDragging, TimeDragStart, TimeDragEnd);
+            var timeDragStarted = false;
+            var timeRect = DottGUI.Time(rect, timeScale, ref isTimeDragging, () => timeDragStarted = true, TimeDragEnd);
             var tweensRect = DottGUI.Tweens(rect, animations, timeScale, selected, ref isTweenDragging, TweenSelected);
 
             if (DottGUI.AddButton(rect))
@@ -38,10 +43,7 @@ namespace Dott.Editor
                 AddClicked?.Invoke();
             }
 
-            if (DottGUI.CallbackButton(rect))
-            {
-                CallbackClicked?.Invoke();
-            }
+            DottGUI.AddMoreButton(rect, AddMoreItems, item => AddMore?.Invoke(item.Type));
 
             if (selected != null && DottGUI.RemoveButton(rect))
             {
@@ -53,18 +55,25 @@ namespace Dott.Editor
                 DuplicateClicked?.Invoke();
             }
 
-            if (isPlaying)
+            if (isPlaying || isPaused)
             {
                 var time = currentPlayingTime * timeScale;
-                DottGUI.TimeVerticalLine(tweensRect, time);
+                var verticalRect = timeRect.Add(tweensRect);
+                DottGUI.TimeVerticalLine(verticalRect, time, isPaused);
+
+                if (isPaused)
+                {
+                    DottGUI.PlayheadLabel(timeRect, time);
+                }
             }
 
             if (isTimeDragging)
             {
                 var time = DottGUI.GetScaledTimeUnderMouse(timeRect);
-                DottGUI.TimeVerticalLine(tweensRect, time);
+                DottGUI.TimeVerticalLine(timeRect.Add(tweensRect), time, underLabel: true);
+                DottGUI.PlayheadLabel(timeRect, time);
 
-                if (Event.current.type == EventType.MouseDrag)
+                if (Event.current.type is EventType.MouseDrag || timeDragStarted)
                 {
                     TimeDrag?.Invoke(time / timeScale);
                 }
@@ -95,6 +104,21 @@ namespace Dott.Editor
             {
                 LoopToggled?.Invoke(loopResult);
             }
+
+            var freezeFrameResult = DottGUI.FreezeFrameToggle(rect, isFreezeFrame);
+            if (freezeFrameResult != isFreezeFrame)
+            {
+                FreezeFrameClicked?.Invoke(freezeFrameResult);
+            }
+
+            if (selected != null && Event.current.type == EventType.MouseDown)
+            {
+                if (rect.Contains(Event.current.mousePosition))
+                {
+                    TweenSelected?.Invoke(null);
+                    Event.current.Use();
+                }
+            }
         }
 
         public void DrawInspector(UnityEditor.Editor editor)
@@ -102,12 +126,38 @@ namespace Dott.Editor
             DottGUI.Inspector(editor);
         }
 
-        private static float CalculateTimeScale(DottAnimation[] animations)
+        private static float CalculateTimeScale(IDOTweenAnimation[] animations)
         {
             var maxTime = animations.Length > 0
                 ? animations.Max(animation => animation.Delay + animation.Duration * Mathf.Max(1, animation.Loops))
                 : 1f;
             return 1f / maxTime;
+        }
+
+        private static AddMoreItem[] CreateAddMoreItems()
+        {
+            var types = AppDomain.CurrentDomain.GetAssemblies()
+                .Where(assembly => !assembly.IsDynamic)
+                .SelectMany(assembly => assembly.GetExportedTypes())
+                .Where(type => type.IsClass && !type.IsAbstract && typeof(IDOTweenAnimation).IsAssignableFrom(type))
+                .ToArray();
+
+            return types
+                .Select((type, _) => new AddMoreItem(new GUIContent($"Add {type.Name.Replace("DOTween", "")}"), type))
+                .Prepend(new AddMoreItem(new GUIContent("Add Tween"), typeof(DOTweenAnimation)))
+                .ToArray();
+        }
+
+        public struct AddMoreItem
+        {
+            public readonly GUIContent Content;
+            public readonly Type Type;
+
+            public AddMoreItem(GUIContent content, Type type)
+            {
+                Content = content;
+                Type = type;
+            }
         }
     }
 }

@@ -4,6 +4,7 @@ using System.Linq;
 using DG.Tweening;
 using JetBrains.Annotations;
 using UnityEditor;
+using UnityEngine;
 
 namespace Dott.Editor
 {
@@ -29,6 +30,10 @@ namespace Dott.Editor
 
         static DottEditorPreview()
         {
+            if (!Application.isPlaying)
+            {
+                DOTween.useSafeMode = false;
+            }
         }
 
         public static void Start()
@@ -47,20 +52,25 @@ namespace Dott.Editor
         {
             IsPlaying = false;
             EditorApplication.update -= Update;
+            CurrentTime = 0;
 
             for (var i = Tweens.Count - 1; i >= 0; i--)
             {
                 var tweenData = Tweens[i];
+                var tween = tweenData.Tween;
+
                 if (tweenData.IsFrom)
                 {
-                    tweenData.Tween.Complete();
+                    // Yes, this is a hack to rewind multiple "from" tweens for the same target
+                    tween.Rewind();
+                    tween.Complete();
                 }
                 else
                 {
-                    tweenData.Tween.Rewind();
+                    tween.Rewind();
                 }
 
-                tweenData.Tween.Kill();
+                tween.Kill();
             }
 
             Tweens.Clear();
@@ -68,12 +78,23 @@ namespace Dott.Editor
             QueuePlayerLoopUpdate();
         }
 
-        public static void Add([NotNull] Tween tween, bool isFrom)
+        public static void GoTo(float time)
+        {
+            CurrentTime = time;
+            DOTween.ManualUpdate(time, time);
+            QueuePlayerLoopUpdate();
+        }
+
+        public static void Add([NotNull] Tween tween, bool isFrom, bool allowCallbacks)
         {
             Tweens.Add(new TweenData(tween, isFrom));
             tween.SetUpdate(UpdateType.Manual);
             tween.SetAutoKill(false);
-            tween.OnComplete(null).OnStart(null).OnPlay(null).OnPause(null).OnUpdate(null).OnWaypointChange(null).OnStepComplete(null).OnRewind(null).OnKill(null);
+            if (!allowCallbacks)
+            {
+                tween.OnComplete(null).OnStart(null).OnPlay(null).OnPause(null).OnUpdate(null).OnWaypointChange(null).OnStepComplete(null).OnRewind(null).OnKill(null);
+            }
+
             tween.Play();
         }
 

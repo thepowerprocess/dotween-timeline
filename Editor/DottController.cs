@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using DG.Tweening;
 using JetBrains.Annotations;
 using UnityEditor;
@@ -8,10 +10,11 @@ namespace Dott.Editor
     public class DottController : IDisposable
     {
         private double startTime;
-        private DottAnimation[] currentPlayAnimations;
+        private IDOTweenAnimation[] currentPlayAnimations;
 
         public bool IsPlaying => DottEditorPreview.IsPlaying;
         public float ElapsedTime => (float)(DottEditorPreview.CurrentTime - startTime);
+        public bool Paused { get; private set; }
 
         public bool Loop
         {
@@ -19,53 +22,64 @@ namespace Dott.Editor
             set => EditorPrefs.SetBool("Dott.Loop", value);
         }
 
+        public bool FreezeFrame
+        {
+            get => EditorPrefs.GetBool("Dott.FreezeFrame", false);
+            set => EditorPrefs.SetBool("Dott.FreezeFrame", value);
+        }
+
         public DottController()
         {
             DottEditorPreview.Completed += DottEditorPreviewOnCompleted;
         }
 
-        public void Play(DottAnimation[] animations)
+        public void Play(IDOTweenAnimation[] animations)
         {
             currentPlayAnimations = animations;
 
-            animations.ForEach(PreviewTween);
+            var shift = (float)DottEditorPreview.CurrentTime;
+            GoTo(animations, shift);
             DottEditorPreview.Start();
-            startTime = DottEditorPreview.CurrentTime;
+            startTime = DottEditorPreview.CurrentTime - shift;
+            Paused = false;
         }
 
-        public void GoTo(DottAnimation[] animations, in float time)
+        public void GoTo(IDOTweenAnimation[] animations, in float time)
         {
             DottEditorPreview.Stop();
 
-            foreach (var animation in animations)
-            {
-                var tween = PreviewTween(animation);
-                if (tween != null)
-                {
-                    var tweenTime = time - animation.Delay;
-                    tween.Goto(tweenTime, andPlay: false);
-                }
-            }
-
-            DottEditorPreview.QueuePlayerLoopUpdate();
+            Sort(animations).ForEach(PreviewTween);
+            DottEditorPreview.GoTo(time);
+            startTime = 0;
         }
 
         public void Stop()
         {
             currentPlayAnimations = null;
+            Paused = false;
             DottEditorPreview.Stop();
         }
 
+        public void Pause()
+        {
+            Paused = true;
+        }
+
         [CanBeNull]
-        private static Tween PreviewTween(DottAnimation animation)
+        private static Tween PreviewTween(IDOTweenAnimation animation)
         {
             if (!animation.IsValid || !animation.IsActive) { return null; }
 
             var tween = animation.CreateEditorPreview();
             if (tween == null) { return null; }
 
-            DottEditorPreview.Add(tween, animation.IsFrom);
+            DottEditorPreview.Add(tween, animation.IsFrom, animation.AllowEditorCallbacks);
             return tween;
+        }
+
+        private static IEnumerable<IDOTweenAnimation> Sort(IDOTweenAnimation[] animations)
+        {
+            return animations.OrderBy(animation => animation.Delay);
         }
 
         private void DottEditorPreviewOnCompleted()

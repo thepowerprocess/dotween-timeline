@@ -3,35 +3,61 @@
 
 A pocket timeline solution for DOTween Pro. Configure and organize complex tween animations directly in the Inspector.
 
-![Hello World!](https://github.com/user-attachments/assets/4f6d57a9-c6a6-4591-94be-7dd4f9623ec1)
+![ezgif-478bb6b997c38b](https://github.com/user-attachments/assets/1cc3d251-d4a8-476a-9dc5-0b43ebe395d4)
 
 ## Installation
 1. **Required**: [**PRO**](https://dotween.demigiant.com/pro.php) version of DOTween.
-2. Download the ```.unitypackage``` file from the [Releases page](https://github.com/medvejut/dotween-timeline/releases).
+2. Download the latest ```.unitypackage``` file from the [Releases page](https://github.com/medvejut/dotween-timeline/releases).
 3. Import it into your project via **Assets > Import Package**.
 
-## Usage
-Add the component **DOTween > DOTween Timeline** to your GameObject (use a separate GameObject for each animation sequence).
+## How to use
+Add the **DOTween > DOTween Timeline** component to a GameObject (use a separate GameObject for each animation sequence).
 
-Tweens will play automatically, but you can also control them from code:
+Control the timeline from code:
 
 ```c#
 [SerializeField] private DOTweenTimeline timeline;
 
-var tween = timeline.AsSequence().Pause();
+var tween = timeline.Play();
 
 tween.OnComplete(() => Debug.Log("OnComplete"));
-tween.Play();
+tween.Pause();
 ```
 
-## DOTweenCallback component
-Sequence.InsertCallback(), but it's a component.
+### Sample
+A sample scene is included to help you get started. You can find it here: _Plugins/DOTweenTimeline/Sample_\
+Open it to see an example of how to configure and use the timeline in practice.
 
-1. Add the component **DOTween > DOTween Callback** to your GameObject.
-2. Configure the _delay_ and optional _id_
-3. Set the _onCallback_ UnityEvent in the Inspector or from code:
+## Recommendations
+
+### 1. Disable default DOTween Pro preview controls
+In the Inspector, on any DOTween animation component:\
+![Group 5 (2)](https://github.com/user-attachments/assets/e8e3c39e-a1b0-4d4a-bd2d-de2af567eca7)
+
+### 2. Enable TextMeshPro support in DOTween
+Go to _Tools > Demigiant > DOTween Utility Panel_ > press _"Setup DOTween..."_ > enable _TextMeshPro_:\
+![Mask group](https://github.com/user-attachments/assets/1674e9e9-ac6c-4b73-a278-37a548806a23)
+
+## Extras
+### DOTween Timeline Player component
+Automatically plays animations without code.\
+Just add the **DOTween > DOTween Timeline Player** component to the same GameObject with the Timeline.
+
+### Extra Actions
+In addition to standard tweens, you can add special timeline actions via the Add dropdown:\
+![Mask group (1)](https://github.com/user-attachments/assets/dc48d249-56f2-41cb-8259-b6aa8db3e46e)
+
+### DOTweenCallback component
+A visual replacement for Sequence.InsertCallback().\
+Use the _onCallback_ UnityEvent in the Inspector or from code:
 ```c#
 [SerializeField] private DOTweenCallback callback;
 
 callback.onCallback.AddListener(() => Debug.Log("Callback"));
 ```
+<img width="477" alt="Снимок экрана 2025-04-05 в 22 16 03" src="https://github.com/user-attachments/assets/746fca7e-1d70-4127-ba92-330c0f7470e6" />
+
+### DOTweenFrame component
+Triggers immediate state changes in a single frame.\
+Perfect for setting position, rotation, color, and more, without animation.\
+<img width="490" alt="Снимок экрана 2025-04-05 в 22 20 15" src="https://github.com/user-attachments/assets/df9226e8-dc83-419b-b1ca-daaf6b70811a" />

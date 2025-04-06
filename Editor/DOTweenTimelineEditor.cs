@@ -1,7 +1,6 @@
 using System;
 using System.Linq;
 using DG.Tweening;
-using DG.Tweening.Core;
 using UnityEditor;
 using UnityEngine;
 
@@ -15,21 +14,27 @@ namespace Dott.Editor
         private DottController controller;
         private DottSelection selection;
         private DottView view;
-        private float dragTweenTimeShift = -1;
-        private DottAnimation[] animations;
+        private float? dragTweenTimeShift;
+        private IDOTweenAnimation[] animations;
 
         public override bool RequiresConstantRepaint() => true;
 
         public override void OnInspectorGUI()
         {
-            animations = Timeline.GetComponents<ABSAnimationComponent>().Select(DottAnimation.Create).ToArray();
+            animations = Timeline.GetComponents<MonoBehaviour>().Select(DottAnimation.FromComponent).Where(animation => animation != null).ToArray();
             selection.Validate(animations);
 
-            view.DrawTimeline(animations, selection.Animation, controller.IsPlaying, controller.ElapsedTime, controller.Loop);
+            view.DrawTimeline(animations, selection.Animation, controller.IsPlaying, controller.ElapsedTime,
+                controller.Loop, controller.FreezeFrame, controller.Paused);
 
             if (selection.Animation != null)
             {
                 view.DrawInspector(selection.GetAnimationEditor());
+            }
+
+            if (controller.Paused && Event.current.type == EventType.Repaint)
+            {
+                controller.GoTo(animations, controller.ElapsedTime);
             }
         }
 
@@ -42,18 +47,18 @@ namespace Dott.Editor
             view.TweenSelected += OnTweenSelected;
             view.TweenDrag += DragSelectedAnimation;
 
-            view.TimeDragStart += controller.Stop;
-            view.TimeDragEnd += controller.Stop;
+            view.TimeDragEnd += OnTimeDragEnd;
             view.TimeDrag += GoTo;
 
             view.AddClicked += AddAnimation;
-            view.CallbackClicked += AddCallback;
+            view.AddMore += AddMore;
             view.RemoveClicked += Remove;
             view.DuplicateClicked += Duplicate;
 
             view.PlayClicked += Play;
             view.StopClicked += controller.Stop;
             view.LoopToggled += ToggleLoop;
+            view.FreezeFrameClicked += ToggleFreeze;
         }
 
         private void OnDisable()
@@ -61,18 +66,18 @@ namespace Dott.Editor
             view.TweenSelected -= OnTweenSelected;
             view.TweenDrag -= DragSelectedAnimation;
 
-            view.TimeDragStart -= controller.Stop;
-            view.TimeDragEnd -= controller.Stop;
-            view.TimeDrag += GoTo;
+            view.TimeDragEnd -= OnTimeDragEnd;
+            view.TimeDrag -= GoTo;
 
             view.AddClicked -= AddAnimation;
-            view.CallbackClicked -= AddCallback;
+            view.AddMore -= AddMore;
             view.RemoveClicked -= Remove;
             view.DuplicateClicked -= Duplicate;
 
             view.PlayClicked -= Play;
             view.StopClicked -= controller.Stop;
             view.LoopToggled -= ToggleLoop;
+            view.FreezeFrameClicked -= ToggleFreeze;
 
             controller.Dispose();
             controller = null;
@@ -95,42 +100,51 @@ namespace Dott.Editor
             controller.GoTo(animations, time);
         }
 
+        private void OnTimeDragEnd()
+        {
+            if (controller.FreezeFrame)
+            {
+                controller.Pause();
+            }
+            else
+            {
+                controller.Stop();
+            }
+        }
+
         private void DragSelectedAnimation(float time)
         {
-            if (dragTweenTimeShift < 0)
-            {
-                dragTweenTimeShift = time - selection.Animation.Delay;
-            }
+            dragTweenTimeShift ??= time - selection.Animation.Delay;
 
-            var delay = time - dragTweenTimeShift;
+            var delay = time - dragTweenTimeShift.Value;
             delay = Mathf.Max(0, delay);
             delay = (float)Math.Round(delay, 2);
             selection.Animation.Delay = delay;
         }
 
-        private void OnTweenSelected(DottAnimation animation)
+        private void OnTweenSelected(IDOTweenAnimation animation)
         {
             selection.Set(animation);
             // clear focus to correctly update inspector
             GUIUtility.keyboardControl = 0;
 
-            dragTweenTimeShift = -1;
+            dragTweenTimeShift = null;
         }
 
         private void AddAnimation()
         {
-            Add<DOTweenAnimation>(Timeline);
+            Add(Timeline, typeof(DOTweenAnimation));
         }
 
-        private void AddCallback()
+        private void AddMore(Type type)
         {
-            Add<DOTweenCallback>(Timeline);
+            Add(Timeline, type);
         }
 
-        private void Add<T>(DOTweenTimeline timeline) where T : ABSAnimationComponent
+        private void Add(DOTweenTimeline timeline, Type type)
         {
-            var component = ObjectFactory.AddComponent<T>(timeline.gameObject);
-            var animation = DottAnimation.Create(component);
+            var component = ObjectFactory.AddComponent(timeline.gameObject, type);
+            var animation = DottAnimation.FromComponent(component);
             selection.Set(animation);
         }
 
@@ -142,18 +156,39 @@ namespace Dott.Editor
 
         private void Duplicate()
         {
+            Undo.SetCurrentGroupName($"Duplicate {selection.Animation.Label}");
+
             var source = selection.Animation.Component;
 
-            var dest = source.gameObject.AddComponent(source.GetType());
+            var dest = Undo.AddComponent(source.gameObject, source.GetType());
             EditorUtility.CopySerialized(source, dest);
 
-            var animation = DottAnimation.Create((ABSAnimationComponent)dest);
+            var animation = DottAnimation.FromComponent(dest);
             selection.Set(animation);
+
+            var components = source.GetComponents<Component>();
+            var targetIndex = Array.IndexOf(components, source) + 1;
+            var index = Array.IndexOf(components, dest);
+            while (index > targetIndex)
+            {
+                UnityEditorInternal.ComponentUtility.MoveComponentUp(dest);
+                index--;
+            }
         }
 
         private void ToggleLoop(bool value)
         {
             controller.Loop = value;
+        }
+
+        private void ToggleFreeze(bool value)
+        {
+            controller.FreezeFrame = value;
+
+            if (!value)
+            {
+                controller.Stop();
+            }
         }
     }
 }

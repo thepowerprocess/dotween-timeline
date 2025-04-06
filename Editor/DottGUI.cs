@@ -1,5 +1,6 @@
 using System;
 using DG.DemiEditor;
+using JetBrains.Annotations;
 using UnityEditor;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -14,6 +15,8 @@ namespace Dott.Editor
         private const int HEADER_HEIGHT = 28;
         private static readonly Vector2 PlayButtonSize = new(44, 24);
         private static readonly Vector2 LoopToggleSize = new(24, 24);
+        private static readonly Vector2 FreezeToggleSize = new(24, 24);
+        private static readonly Color PlayheadColor = new(0.19f, 0.44f, 0.89f);
 
         private static readonly Color[] Colors =
         {
@@ -65,6 +68,7 @@ namespace Dott.Editor
 
             var bottomLine = new Rect(rect.x, rect.y + rect.height, rect.width, 1);
             EditorGUI.DrawRect(bottomLine, Color.black);
+            EditorGUIUtility.AddCursorRect(rect, MouseCursor.Link);
 
             ProcessDragEvents(rect, ref isDragging, start, end);
 
@@ -73,18 +77,47 @@ namespace Dott.Editor
 
         private static void ProcessDragEvents(Rect rect, ref bool isDragging, Action start, Action end)
         {
-            switch (Event.current.type)
+            var current = Event.current;
+            switch (current.type)
             {
-                case EventType.MouseDown when !isDragging && rect.Contains(Event.current.mousePosition):
+                case EventType.MouseDown when !isDragging && rect.Contains(current.mousePosition):
                     isDragging = true;
                     start?.Invoke();
+                    current.Use();
                     break;
 
                 case EventType.MouseUp when isDragging:
                     isDragging = false;
                     end?.Invoke();
+                    current.Use();
                     break;
             }
+        }
+
+        public static void PlayheadLabel(Rect timeRect, float time)
+        {
+            var labelStyle = new GUIStyle(GUI.skin.label)
+            {
+                fontSize = 9,
+                fontStyle = FontStyle.Bold,
+                normal = { textColor = Color.white },
+                hover = { textColor = Color.white },
+                alignment = TextAnchor.MiddleCenter
+            };
+
+            var position = new Vector2(timeRect.x + time * timeRect.width, timeRect.y);
+            var labelContent = new GUIContent(time.ToString("0.00"));
+
+            const int yShift = 1;
+            var labelRect = new Rect(position.x, position.y + yShift, 32, timeRect.height - yShift * 2);
+            labelRect.x -= labelRect.width * 0.5f;
+            const int maxXShift = 4;
+            labelRect.x = Mathf.Clamp(labelRect.x, timeRect.x - maxXShift, timeRect.xMax - labelRect.width + maxXShift);
+
+            var labelBackground = new Rect(labelRect.x, labelRect.y, labelRect.width, labelRect.height);
+            RoundRect(labelBackground, PlayheadColor, borderRadius: 8);
+
+            GUI.Label(labelRect, labelContent, labelStyle);
         }
 
         public static float GetScaledTimeUnderMouse(Rect timeRect)
@@ -94,18 +127,18 @@ namespace Dott.Editor
             return time;
         }
 
-        public static Rect Tweens(Rect rect, DottAnimation[] animations, float timeScale, DottAnimation selected, ref bool isTweenDragging, Action<DottAnimation> tweenSelected)
+        public static Rect Tweens(Rect rect, IDOTweenAnimation[] animations, float timeScale, [CanBeNull] IDOTweenAnimation selected, ref bool isTweenDragging, Action<IDOTweenAnimation> tweenSelected)
         {
             rect = rect.ShiftY(HEADER_HEIGHT + TIME_HEIGHT).SetHeight(animations.Length * ROW_HEIGHT);
 
-            DottAnimation startDrag = null;
+            IDOTweenAnimation startDrag = null;
 
             for (var i = 0; i < animations.Length; i++)
             {
                 var animation = animations[i];
                 var rowRect = new Rect(rect.x, rect.y + i * ROW_HEIGHT, rect.width, ROW_HEIGHT);
-                var isSelected = selected == animation;
-                var tweenRect = Tween(animation, rowRect, isSelected, timeScale);
+                var isSelected = selected?.Component == animation.Component;
+                var tweenRect = Element(animation, rowRect, isSelected, timeScale);
 
                 ProcessDragEvents(tweenRect, ref isTweenDragging, start: Start, end: null);
 
@@ -120,19 +153,91 @@ namespace Dott.Editor
                 }
             }
 
-            if (startDrag == null && Event.current.type == EventType.MouseDown && rect.Contains(Event.current.mousePosition))
+            return rect;
+        }
+
+        private static Rect Element(IDOTweenAnimation animation, Rect rowRect, bool isSelected, float timeScale)
+        {
+            if (animation.CallbackView)
             {
-                tweenSelected?.Invoke(null);
+                return Callback(animation, rowRect, isSelected, timeScale);
             }
+
+            return Tween(animation, rowRect, isSelected, timeScale);
+        }
+
+        private static Rect Callback(IDOTweenAnimation animation, Rect rowRect, bool isSelected, float timeScale)
+        {
+            void Label(Rect rect, GUIContent content, GUIStyle style)
+            {
+                GUI.Label(rect, content, style);
+            }
+
+            void Icon(bool isHovered, Rect iconRect)
+            {
+                var iconColor = Color.white.SetAlpha(0.6f);
+                if (isSelected)
+                {
+                    iconColor = new Color(0.2f, 0.6f, 1f);
+                }
+                else if (isHovered)
+                {
+                    iconColor = Color.white.SetAlpha(0.5f);
+                }
+
+                var icon = animation.CustomIcon ?? IconCallback;
+                GUI.DrawTexture(iconRect, icon, ScaleMode.ScaleToFit, true, 0, iconColor, 0, 0);
+            }
+
+            void Underline(bool isHovered, Rect textRect)
+            {
+                if (!isSelected && !isHovered) { return; }
+
+                var underlineRect = new Rect(textRect.x, textRect.yMax - 4, textRect.width, 1);
+                var color = isHovered ? Color.white.SetAlpha(0.7f) : Color.white;
+                EditorGUI.DrawRect(underlineRect, color);
+            }
+
+            var textStyle = new GUIStyle(GUI.skin.label)
+            {
+                fontStyle = FontStyle.Bold, fontSize = 10,
+                alignment = TextAnchor.MiddleCenter,
+                normal = { textColor = Color.white },
+                richText = true
+            };
+
+            var iconX = CalculateX(rowRect, animation.Delay, timeScale);
+            var iconRect = new Rect(iconX, rowRect.y, width: 10, height: 20);
+
+            var labelContent = new GUIContent(animation.Label);
+
+            textStyle.padding = new RectOffset((int)iconRect.width + 4, 0, 0, 1);
+            var textWidth = textStyle.CalcSize(labelContent).x;
+            var rect = new Rect(iconRect.x, rowRect.y, textWidth, rowRect.height);
+
+            var onRightSide = rect.x > rowRect.x + rowRect.width * 0.5f;
+            var outOfBounds = rect.xMax > rowRect.xMax;
+            if (onRightSide && outOfBounds)
+            {
+                (textStyle.padding.right, textStyle.padding.left) = (textStyle.padding.left, textStyle.padding.right);
+                rect.x = iconRect.xMax - textWidth;
+            }
+
+            var textOnlyRect = rect.Shift(textStyle.padding.left, 0, -textStyle.padding.horizontal, 0);
+            var isHovered = rect.Contains(Event.current.mousePosition);
+
+            Icon(isHovered, iconRect);
+            Underline(isHovered, textOnlyRect);
+            Label(rect, labelContent, textStyle);
 
             return rect;
         }
 
-        private static Rect Tween(DottAnimation animation, Rect rowRect, bool isSelected, float timeScale)
+        private static Rect Tween(IDOTweenAnimation animation, Rect rowRect, bool isSelected, float timeScale)
         {
             var isInfinite = animation.Loops == -1;
             var loops = Mathf.Max(1, animation.Loops);
-            var start = rowRect.x + animation.Delay * timeScale * rowRect.width;
+            var start = CalculateX(rowRect, animation.Delay, timeScale);
             var width = isInfinite
                 ? rowRect.width - start + rowRect.x
                 : animation.Duration * loops * timeScale * rowRect.width;
@@ -142,13 +247,13 @@ namespace Dott.Editor
 
             RoundRect(tweenRect, Color.gray.SetAlpha(0.3f * alphaMultiplier), borderRadius: 4);
 
+            var mouseHover = tweenRect.Contains(Event.current.mousePosition);
             if (isSelected)
             {
                 RoundRect(tweenRect, Color.white.SetAlpha(0.9f * alphaMultiplier), borderRadius: 4, borderWidth: 2);
             }
             else
             {
-                var mouseHover = tweenRect.Contains(Event.current.mousePosition);
                 if (mouseHover)
                 {
                     RoundRect(tweenRect, Color.white.SetAlpha(0.9f), borderRadius: 4, borderWidth: 1);
@@ -156,57 +261,123 @@ namespace Dott.Editor
             }
 
             var colorLine = new Rect(tweenRect.x + 1, tweenRect.y + tweenRect.height - 3, tweenRect.width - 2, 2);
-            Random.InitState((int)GlobalObjectId.GetGlobalObjectIdSlow(animation.Component).targetObjectId);
+            Random.InitState(animation.Component.GetInstanceID());
             var color = Colors.GetRandom();
             EditorGUI.DrawRect(colorLine, color.SetAlpha(0.6f * alphaMultiplier));
 
-            var label = animation.Label();
+            var label = new GUIContent(animation.Label);
             var style = new GUIStyle(GUI.skin.label)
             {
                 fontStyle = FontStyle.Bold, fontSize = 10,
                 alignment = TextAnchor.MiddleCenter,
                 normal = { textColor = Color.white.SetAlpha(alphaMultiplier) }
             };
-            GUI.Label(tweenRect, label, style);
+            var labelWidth = style.CalcSize(label).x;
+            var labelRect = tweenRect;
+            if (labelWidth > labelRect.width)
+            {
+                label.tooltip = animation.Label;
+                style.alignment = mouseHover ? TextAnchor.MiddleRight : TextAnchor.MiddleLeft;
+
+                // just to make it look nice
+                labelRect.xMin += 4f;
+            }
+
+            GUI.Label(labelRect, label, style);
 
             return tweenRect;
         }
 
-        public static void TimeVerticalLine(Rect rect, float time)
+        private static float CalculateX(Rect rowRect, float time, float timeScale)
         {
-            var verticalLine = new Rect(rect.x + time * rect.width, rect.y, 1, rect.height);
-            EditorGUI.DrawRect(verticalLine, Color.white);
+            return rowRect.x + time * timeScale * rowRect.width;
+        }
+
+        public static void TimeVerticalLine(Rect rect, float time, bool underLabel)
+        {
+            // some extra shift to nice look on borders
+            var shift = underLabel ? 10 : 1;
+            var verticalLine = new Rect(rect.x + time * rect.width, rect.y + shift, 1, rect.height - shift);
+            EditorGUI.DrawRect(verticalLine, PlayheadColor);
         }
 
         public static void Inspector(UnityEditor.Editor editor)
         {
+            var headerStyle = new GUIStyle(EditorStyles.boldLabel)
+            {
+                alignment = TextAnchor.MiddleLeft
+            };
+
             EditorGUILayout.Space();
-            GUILayout.Label("Inspector", EditorStyles.boldLabel);
+
+            Splitter(new Color(0.12f, 0.12f, 0.12f, 1.333f));
+
+            var backgroundRect = GUILayoutUtility.GetRect(1f, EditorGUIUtility.singleLineHeight);
+            var labelRect = backgroundRect;
+            backgroundRect = ToFullWidth(backgroundRect);
+            EditorGUI.DrawRect(backgroundRect, new Color(0.1f, 0.1f, 0.1f, 0.2f));
+            EditorGUI.LabelField(labelRect, "Inspector", headerStyle);
+
+            Splitter(new Color(0.19f, 0.19f, 0.19f, 1.333f));
+
             editor.OnInspectorGUI();
+        }
+
+        private static void Splitter(Color color)
+        {
+            var rect = GUILayoutUtility.GetRect(1f, 1f);
+            rect = ToFullWidth(rect);
+            EditorGUI.DrawRect(rect, color);
+        }
+
+        private static Rect ToFullWidth(Rect rect)
+        {
+            rect.xMin = 0f;
+            rect.width += 4f;
+            return rect;
         }
 
         public static bool AddButton(Rect timelineRect)
         {
-            var buttonSize = new Vector2(28, 24);
-            var position = new Vector2(timelineRect.x + (BOTTOM_HEIGHT - buttonSize.y) / 2, timelineRect.y + timelineRect.height - BOTTOM_HEIGHT + (BOTTOM_HEIGHT - buttonSize.y) / 2);
-            var buttonRect = new Rect(position, buttonSize);
+            var buttonRect = CalculateAddButtonRect(timelineRect);
             var image = Resources.Load<Texture>("dotween.timeline.add.tween");
             var content = new GUIContent(image) { tooltip = "Add tween" };
-            return GUI.Button(buttonRect, content);
+            var style = new GUIStyle(EditorStyles.miniButtonLeft) { fixedHeight = 0 };
+            return GUI.Button(buttonRect, content, style);
         }
 
-        public static bool CallbackButton(Rect timelineRect)
+        private static Rect CalculateAddButtonRect(Rect timelineRect)
         {
-            var buttonSize = new Vector2(22, 24);
-            var position = new Vector2(timelineRect.x + (BOTTOM_HEIGHT - buttonSize.y) / 2 + 28 + 2, timelineRect.y + timelineRect.height - BOTTOM_HEIGHT + (BOTTOM_HEIGHT - buttonSize.y) / 2);
-            var buttonRect = new Rect(position, buttonSize);
+            var buttonSize = new Vector2(32, 24);
+            var position = new Vector2(timelineRect.x + (BOTTOM_HEIGHT - buttonSize.y) / 2, timelineRect.y + timelineRect.height - BOTTOM_HEIGHT + (BOTTOM_HEIGHT - buttonSize.y) / 2);
+            return new Rect(position, buttonSize);
+        }
+
+        public static void AddMoreButton(Rect timelineRect, DottView.AddMoreItem[] items, Action<DottView.AddMoreItem> clicked)
+        {
+            const float buttonWidth = 20;
+            var addButtonRect = CalculateAddButtonRect(timelineRect);
+            var buttonRect = addButtonRect.ShiftX(addButtonRect.width).SetWidth(buttonWidth);
+            var dropDrownIcon = EditorGUIUtility.IconContent("icon dropdown");
+
+            var style = new GUIStyle(EditorStyles.miniButtonRight) { fixedHeight = 0 };
             var backgroundColor = GUI.backgroundColor;
             GUI.backgroundColor = backgroundColor.SetAlpha(0.55f);
-            var content = EditorGUIUtility.IconContent("d_Animation.AddEvent");
-            content.tooltip = "Add callback";
-            var result = GUI.Button(buttonRect, content);
+            var result = EditorGUI.DropdownButton(buttonRect, dropDrownIcon, FocusType.Passive, style);
             GUI.backgroundColor = backgroundColor;
-            return result;
+
+            if (!result)
+            {
+                return;
+            }
+
+            var menu = new GenericMenu();
+            foreach (var item in items)
+            {
+                menu.AddItem(item.Content, false, userData => clicked?.Invoke((DottView.AddMoreItem)userData), item);
+            }
+
+            menu.DropDown(addButtonRect.ShiftX(-4));
         }
 
         public static bool RemoveButton(Rect timelineRect)
@@ -229,7 +400,7 @@ namespace Dott.Editor
 
         public static bool PlayButton(Rect rect)
         {
-            var content = EditorGUIUtility.IconContent("d_PlayButton On");
+            var content = EditorGUIUtility.IconContent("d_PlayButton");
             var position = rect.position + new Vector2(2, (HEADER_HEIGHT - PlayButtonSize.y) / 2);
             var buttonRect = new Rect(position, PlayButtonSize);
             var contentColor = GUI.contentColor;
@@ -255,10 +426,31 @@ namespace Dott.Editor
             return GUI.Toggle(toggleRect, value, iconContent, style);
         }
 
+        public static bool FreezeFrameToggle(Rect rect, bool value)
+        {
+            var position = rect.position + new Vector2(rect.width - LoopToggleSize.x - 2 - FreezeToggleSize.x - 2, (HEADER_HEIGHT - FreezeToggleSize.y) / 2);
+            var toggleRect = new Rect(position, FreezeToggleSize);
+            var style = new GUIStyle(GUI.skin.button) { padding = new RectOffset(0, 0, 0, 0) };
+            return GUI.Toggle(toggleRect, value, IconFreezeFrame, style);
+        }
+
         private static void RoundRect(Rect rect, Color color, float borderRadius, float borderWidth = 0)
         {
             GUI.DrawTexture(rect, EditorGUIUtility.whiteTexture, ScaleMode.StretchToFill, alphaBlend: false,
                 imageAspect: 0, color, borderWidth, borderRadius);
         }
+
+        #region Icons
+
+        private static Texture2D IconFreezeFrame => DottUtils.ImageFromString(ICON_FREEZE_FRAME);
+        private static Texture2D IconCallback => DottUtils.ImageFromString(ICON_CALLBACK);
+
+        private const string ICON_FREEZE_FRAME =
+            "iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAN4SURBVHgB7ZhfSFNRGMDP1nK2zSZG6oyLIwV98KWsXmVQDz5YVG9RT0JMfZHAx8rSXhT7Y4gP4YtMyr3NxCRBmyyKCRpEJoqK0Jjur2PDzdx2+z679z7Y3eTOq012fvBxv51zvnP/nO9833dGCIVCoVAoFEruoiASYVm2AC43QDQphnxTKBTOFLYX4HI5hd0WiA1sw+QwgYe4y6anI43ts31s7xGJqIh0+C//HsQu0v85je0HkIBIex1IA8gpIpFMXoDnEyz3cykGMN4BF8fedvjyeGkgGaAkxxz6Av+bnHwBjPFPQL4Q+XBwc84SCiW3UKXQsx7hYWdmZnrtdvsrsT5JEx0RJ0ASIPGFhYWncA3Mzc1FVCoV63a7m/x+f1lNTc1DbixGyCSRG6hbLoE8BrkiwUwo25eXl2+1t7cre3p6GCw/Y7GYe2dnx4V6X18fg2O8Xm+DmK0swH3uc6XvAwlmytbWViMq29vb0dHRURPqXV1dpTBPAqWtra0U28bGxuoSicRudWc2m9FG3mSb4QugXWhzc/O7y+X6uLS0ZOHbp6am+qenp/v536urq0Pr6+sTkUjkB9j495v3qEqJfCil9TqdzmkwGK5VVlbeBHfRYQf4fxE8aBHqg4ODWqPReLukpORqXl7eLNicgWY1kZMDrEAAjYLB4ARs2GHUw+Fw88jISK/NZnsdCASasA1W6B3sgUnuHvIfLzPdA1ar9Vx9fb3wNQcGBs6Dm8xycyXhZX46HI4yvr+2tvbk+Pi4gezjJQcJoya4sViE+ApL/8+xUq1WswzDCGGxqqoqxt0fNyzO83ttbS2f7y8uLlZubGwoySFEoYwO9egO2OnxeCbBTd6i7vP5mtF9UEKhUDPnQsOQDya4uYJEbmDSAvz3gHMlMbkoYrb7ZePx+BvuwWLgUrubGLLwMEQhK+rd3d1a6NtKJpMsjOUjVdpNLO/ypAEezAs+7wNf/xWNRr0VFRV3sB1DKMR9hclkMuNvCLFDGo3mrFarNej1+nJwx9MkC1A2NjaWo4JJCpMV6pi8+ESGSQ3bMMlBssP9QbjklxWnRmGl+TIBywb0JSwjQNyod3Z2MlhmrKysXBezTTvxESEUaPPz8x2FhYUui8XCtLS0KJxOpweSXFF1dfWjvWOzESF8wyZ+sbi4+FKs7zhwbA80FAqF8pc/YIJhbIXLtTcAAAAASUVORK5CYII=";
+
+        private const string ICON_CALLBACK =
+            "iVBORw0KGgoAAAANSUhEUgAAABQAAAAoCAYAAAD+MdrbAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAD4SURBVHgB7ZWxCoJQFIaPkkuOQVtDLQ02tPQGDrn6CvU+tbeH4NTmCzgLRWM0NGhBuCiBBXZO3eISFXppMLgf/ChX7ufPWQ6ApHIo3HsX08ZoUI4zZodZ84c9x3GmWZYleUmSJNnTXVboiUUfckGoCDqGJFKZsKbrehME0TRNBzYqFX6MFEqhFErhnwsvcRxvQZA0TQ/4OPFnHdu2RyJrAIts8O4YXnYK0cKYvu/Pi4hoj3ieN8M7Fty35VvqmD61jaJo+UkWhuGKtRpAwbV7a+u67oQfA9fKxDSgJPRng9oGQbCgsFYGfGmlFBDTGB4zijBHkEgqzhX38zVoGGkfagAAAABJRU5ErkJggg==";
+
+        #endregion
     }
 }
