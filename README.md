@@ -3,6 +3,8 @@
 
 A pocket timeline solution for DOTween Pro. Configure and organize complex tween animations directly in the Inspector.
 
+![ezgif-87893df15a67ba](https://github.com/user-attachments/assets/66a1f8d7-0105-43aa-899e-d6015d6784a4)
+
 ## Installation
 1. **Required**: [**PRO**](https://dotween.demigiant.com/pro.php) version of DOTween.
 2. Download the latest ```.unitypackage``` file from the [Releases page](https://github.com/medvejut/dotween-timeline/releases).
