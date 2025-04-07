@@ -94,7 +94,7 @@ namespace Dott.Editor
             }
         }
 
-        public static void PlayheadLabel(Rect timeRect, float time)
+        public static void PlayheadLabel(Rect timeRect, float scaledTime, float rawTime)
         {
             var labelStyle = new GUIStyle(GUI.skin.label)
             {
@@ -105,8 +105,8 @@ namespace Dott.Editor
                 alignment = TextAnchor.MiddleCenter
             };
 
-            var position = new Vector2(timeRect.x + time * timeRect.width, timeRect.y);
-            var labelContent = new GUIContent(time.ToString("0.00"));
+            var position = new Vector2(timeRect.x + scaledTime * timeRect.width, timeRect.y);
+            var labelContent = new GUIContent(rawTime.ToString("0.00"));
 
             const int yShift = 1;
             var labelRect = new Rect(position.x, position.y + yShift, 32, timeRect.height - yShift * 2);
@@ -293,11 +293,11 @@ namespace Dott.Editor
             return rowRect.x + time * timeScale * rowRect.width;
         }
 
-        public static void TimeVerticalLine(Rect rect, float time, bool underLabel)
+        public static void TimeVerticalLine(Rect rect, float scaledTime, bool underLabel)
         {
             // some extra shift to nice look on borders
             var shift = underLabel ? 10 : 1;
-            var verticalLine = new Rect(rect.x + time * rect.width, rect.y + shift, 1, rect.height - shift);
+            var verticalLine = new Rect(rect.x + scaledTime * rect.width, rect.y + shift, 1, rect.height - shift);
             EditorGUI.DrawRect(verticalLine, PlayheadColor);
         }
 

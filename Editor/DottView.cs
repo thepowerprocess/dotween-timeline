@@ -57,25 +57,26 @@ namespace Dott.Editor
 
             if (isPlaying || isPaused)
             {
-                var time = currentPlayingTime * timeScale;
+                var scaledTime = currentPlayingTime * timeScale;
                 var verticalRect = timeRect.Add(tweensRect);
-                DottGUI.TimeVerticalLine(verticalRect, time, isPaused);
+                DottGUI.TimeVerticalLine(verticalRect, scaledTime, isPaused);
 
                 if (isPaused)
                 {
-                    DottGUI.PlayheadLabel(timeRect, time);
+                    DottGUI.PlayheadLabel(timeRect, scaledTime, currentPlayingTime);
                 }
             }
 
             if (isTimeDragging)
             {
-                var time = DottGUI.GetScaledTimeUnderMouse(timeRect);
-                DottGUI.TimeVerticalLine(timeRect.Add(tweensRect), time, underLabel: true);
-                DottGUI.PlayheadLabel(timeRect, time);
+                var scaledTime = DottGUI.GetScaledTimeUnderMouse(timeRect);
+                var rawTime = scaledTime / timeScale;
+                DottGUI.TimeVerticalLine(timeRect.Add(tweensRect), scaledTime, underLabel: true);
+                DottGUI.PlayheadLabel(timeRect, scaledTime, rawTime);
 
                 if (Event.current.type is EventType.MouseDrag || timeDragStarted)
                 {
-                    TimeDrag?.Invoke(time / timeScale);
+                    TimeDrag?.Invoke(rawTime);
                 }
             }
 
