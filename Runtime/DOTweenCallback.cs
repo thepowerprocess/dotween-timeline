@@ -4,7 +4,6 @@ using UnityEngine.Events;
 
 namespace Dott
 {
-    [AddComponentMenu("DOTween/DOTween Callback")]
     public partial class DOTweenCallback : MonoBehaviour
     {
         [SerializeField] public string id;

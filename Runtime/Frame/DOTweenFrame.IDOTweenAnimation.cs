@@ -3,7 +3,6 @@ using UnityEngine;
 
 namespace Dott
 {
-    [AddComponentMenu("DOTween/DOTween Frame")]
     public partial class DOTweenFrame : IDOTweenAnimation
     {
         private const string ICON_FRAME =
