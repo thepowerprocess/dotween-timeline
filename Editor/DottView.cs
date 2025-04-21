@@ -13,6 +13,9 @@ namespace Dott.Editor
         private bool isTweenDragging;
         private static readonly AddMoreItem[] AddMoreItems = CreateAddMoreItems();
 
+        public bool IsTimeDragging => isTimeDragging;
+        public bool IsTweenDragging => isTweenDragging;
+
         public event Action TimeDragEnd;
         public event Action<float> TimeDrag;
         public event Action<IDOTweenAnimation> TweenSelected;

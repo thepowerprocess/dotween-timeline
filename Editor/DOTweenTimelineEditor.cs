@@ -36,6 +36,12 @@ namespace Dott.Editor
             {
                 controller.GoTo(animations, controller.ElapsedTime);
             }
+
+            // Smoother ui updates
+            if (controller.IsPlaying || view.IsTimeDragging || view.IsTweenDragging)
+            {
+                Repaint();
+            }
         }
 
         private void OnEnable()
