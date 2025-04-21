@@ -35,7 +35,7 @@ namespace Dott.Editor
             RoundRect(rect, Color.black, borderRadius: 4, borderWidth: 1);
         }
 
-        public static void Header(Rect rect)
+        public static Rect Header(Rect rect)
         {
             rect = rect.SetHeight(HEADER_HEIGHT);
 
@@ -45,6 +45,8 @@ namespace Dott.Editor
 
             var bottomLine = new Rect(rect.x, rect.y + rect.height, rect.width, 1);
             EditorGUI.DrawRect(bottomLine, Color.black);
+
+            return rect;
         }
 
         public static Rect Time(Rect rect, float timeScale, ref bool isDragging, Action start, Action end)

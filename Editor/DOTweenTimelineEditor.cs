@@ -49,6 +49,7 @@ namespace Dott.Editor
 
             view.TimeDragEnd += OnTimeDragEnd;
             view.TimeDrag += GoTo;
+            view.HeaderClicked += OnHeaderClicked;
 
             view.AddClicked += AddAnimation;
             view.AddMore += AddMore;
@@ -68,6 +69,7 @@ namespace Dott.Editor
 
             view.TimeDragEnd -= OnTimeDragEnd;
             view.TimeDrag -= GoTo;
+            view.HeaderClicked -= OnHeaderClicked;
 
             view.AddClicked -= AddAnimation;
             view.AddMore -= AddMore;
@@ -186,6 +188,14 @@ namespace Dott.Editor
             controller.FreezeFrame = value;
 
             if (!value)
+            {
+                controller.Stop();
+            }
+        }
+
+        private void OnHeaderClicked()
+        {
+            if (controller.FreezeFrame && controller.Paused)
             {
                 controller.Stop();
             }

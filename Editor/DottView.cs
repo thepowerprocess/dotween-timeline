@@ -25,13 +25,14 @@ namespace Dott.Editor
         public event Action PlayClicked;
         public event Action<bool> LoopToggled;
         public event Action<bool> FreezeFrameClicked;
+        public event Action HeaderClicked;
 
         public void DrawTimeline(IDOTweenAnimation[] animations, [CanBeNull] IDOTweenAnimation selected, bool isPlaying, float currentPlayingTime, bool isLooping, bool isFreezeFrame, bool isPaused)
         {
             var rect = DottGUI.GetTimelineControlRect(animations.Length);
 
             DottGUI.Background(rect);
-            DottGUI.Header(rect);
+            var headerRect = DottGUI.Header(rect);
 
             var timeScale = CalculateTimeScale(animations);
             var timeDragStarted = false;
@@ -112,12 +113,17 @@ namespace Dott.Editor
                 FreezeFrameClicked?.Invoke(freezeFrameResult);
             }
 
-            if (selected != null && Event.current.type == EventType.MouseDown)
+            if (Event.current.type == EventType.MouseDown)
             {
-                if (rect.Contains(Event.current.mousePosition))
+                var mousePosition = Event.current.mousePosition;
+                if (headerRect.Contains(mousePosition))
+                {
+                    HeaderClicked?.Invoke();
+                }
+
+                if (selected != null && rect.Contains(mousePosition))
                 {
                     TweenSelected?.Invoke(null);
-                    Event.current.Use();
                 }
             }
         }
