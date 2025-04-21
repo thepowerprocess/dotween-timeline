@@ -66,6 +66,8 @@ namespace Dott.Editor
             view.StopClicked += controller.Stop;
             view.LoopToggled += ToggleLoop;
             view.FreezeFrameClicked += ToggleFreeze;
+
+            EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
         }
 
         private void OnDisable()
@@ -86,6 +88,8 @@ namespace Dott.Editor
             view.StopClicked -= controller.Stop;
             view.LoopToggled -= ToggleLoop;
             view.FreezeFrameClicked -= ToggleFreeze;
+
+            EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
 
             controller.Dispose();
             controller = null;
@@ -207,6 +211,15 @@ namespace Dott.Editor
         private void OnHeaderClicked()
         {
             if (controller.FreezeFrame && controller.Paused)
+            {
+                controller.Stop();
+            }
+        }
+
+        private void OnPlayModeStateChanged(PlayModeStateChange stateChange)
+        {
+            // Rewind tweens before play mode. OnDisable is too late (runs after dirty state is saved)
+            if (stateChange == PlayModeStateChange.ExitingEditMode)
             {
                 controller.Stop();
             }
