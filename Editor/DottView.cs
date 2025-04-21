@@ -16,7 +16,7 @@ namespace Dott.Editor
         public bool IsTimeDragging => isTimeDragging;
         public bool IsTweenDragging => isTweenDragging;
 
-        public event Action TimeDragEnd;
+        public event Action<Event> TimeDragEnd;
         public event Action<float> TimeDrag;
         public event Action<IDOTweenAnimation> TweenSelected;
         public event Action<float> TweenDrag;

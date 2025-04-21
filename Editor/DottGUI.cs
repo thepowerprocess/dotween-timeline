@@ -49,7 +49,7 @@ namespace Dott.Editor
             return rect;
         }
 
-        public static Rect Time(Rect rect, float timeScale, ref bool isDragging, Action start, Action end)
+        public static Rect Time(Rect rect, float timeScale, ref bool isDragging, Action start, Action<Event> end)
         {
             rect = rect.ShiftY(HEADER_HEIGHT).SetHeight(TIME_HEIGHT);
 
@@ -77,7 +77,7 @@ namespace Dott.Editor
             return rect;
         }
 
-        private static void ProcessDragEvents(Rect rect, ref bool isDragging, Action start, Action end)
+        private static void ProcessDragEvents(Rect rect, ref bool isDragging, Action start, Action<Event> end)
         {
             var current = Event.current;
             switch (current.type)
@@ -90,7 +90,7 @@ namespace Dott.Editor
 
                 case EventType.MouseUp when isDragging:
                     isDragging = false;
-                    end?.Invoke();
+                    end?.Invoke(current);
                     current.Use();
                     break;
             }

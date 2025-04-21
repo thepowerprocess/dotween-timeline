@@ -108,9 +108,9 @@ namespace Dott.Editor
             controller.GoTo(animations, time);
         }
 
-        private void OnTimeDragEnd()
+        private void OnTimeDragEnd(Event mouseEvent)
         {
-            if (controller.FreezeFrame)
+            if (controller.FreezeFrame && !mouseEvent.IsRightMouseButton())
             {
                 controller.Pause();
             }
