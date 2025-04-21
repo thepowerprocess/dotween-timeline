@@ -153,6 +153,11 @@ namespace Dott.Editor
         {
             var component = ObjectFactory.AddComponent(timeline.gameObject, type);
             var animation = DottAnimation.FromComponent(component);
+            if (controller.FreezeFrame && controller.Paused)
+            {
+                animation!.Delay = (float)Math.Round(controller.ElapsedTime, 2);
+            }
+
             selection.Set(animation);
         }
 
