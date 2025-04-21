@@ -61,3 +61,8 @@ callback.onCallback.AddListener(() => Debug.Log("Callback"));
 Triggers immediate state changes in a single frame.\
 Perfect for setting position, rotation, color, and more, without animation.\
 <img width="490" alt="Снимок экрана 2025-04-05 в 22 20 15" src="https://github.com/user-attachments/assets/df9226e8-dc83-419b-b1ca-daaf6b70811a" />
+
+## Inspired by
+- [Animation Creator Timeline (UI Tween)](https://assetstore.unity.com/packages/tools/animation/animation-creator-timeline-ui-tween-186589)
+- [DOTween Timeline Preview](https://www.youtube.com/watch?v=hrX0xZ3JCXU)
+- [Jitter](https://jitter.video/)
