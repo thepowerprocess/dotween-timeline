@@ -6,9 +6,22 @@ A pocket timeline solution for DOTween Pro. Configure and organize complex tween
 ![ezgif-478bb6b997c38b](https://github.com/user-attachments/assets/1cc3d251-d4a8-476a-9dc5-0b43ebe395d4)
 
 ## Installation
-1. **Required**: [**PRO**](https://dotween.demigiant.com/pro.php) version of DOTween.
-2. Download the latest ```.unitypackage``` file from the [Releases page](https://github.com/medvejut/dotween-timeline/releases).
-3. Import it into your project via **Assets > Import Package**.
+> [!IMPORTANT]
+> **Required**: [**PRO**](https://dotween.demigiant.com/pro.php) version of DOTween.
+
+### Releases page
+Easiest way is to install DOTween Timeline as an asset package.
+1. Download the latest ```.unitypackage``` file from the [Releases page](https://github.com/medvejut/dotween-timeline/releases).
+2. Import it into your project via **Assets > Import Package > Custom Package**.
+
+### Git UPM
+You can also install this package via Git URL using Unity Package Manager.
+1. Since DOTween is not distributed as a upm package by default, you need to manually generate `.asmdef` files for it:\
+  Open **Tools > Demigiant > DOTween Utility Panel**, click **Create ASMDEF**
+2. Then, add the following line to your `Packages/manifest.json`:
+```
+"com.medvejut.dotweentimeline": "https://github.com/medvejut/dotween-timeline.git#upm"
+```
 
 ## How to use
 Add the **DOTween > DOTween Timeline** component to a GameObject (use a separate GameObject for each animation sequence).
