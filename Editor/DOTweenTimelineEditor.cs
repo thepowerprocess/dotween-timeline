@@ -112,14 +112,14 @@ namespace Dott.Editor
 
         private void OnTimeDragEnd(Event mouseEvent)
         {
-            if (!mouseEvent.IsRightMouseButton())
-            {
-                controller.Pause();
-            }
-            else
+            const int mouseButtonMiddle = 2;
+            if (mouseEvent.IsRightMouseButton() || mouseEvent.button == mouseButtonMiddle)
             {
                 controller.Stop();
+                return;
             }
+
+            controller.Pause();
         }
 
         private void DragSelectedAnimation(float time)
