@@ -454,7 +454,7 @@ namespace Dott.Editor
         {
             var position = rect.position + new Vector2(rect.width - LoopToggleSize.x - 2, (HEADER_HEIGHT - LoopToggleSize.y) / 2);
             var toggleRect = new Rect(position, LoopToggleSize);
-            var iconContent = EditorGUIUtility.IconContent("preAudioLoopOff");
+            var iconContent = EditorGUIUtility.TrIconContent("preAudioLoopOff", "Toggle loop playback");
             var style = new GUIStyle(GUI.skin.button) { padding = new RectOffset(0, 0, 0, 0) };
             return GUI.Toggle(toggleRect, value, iconContent, style);
         }
