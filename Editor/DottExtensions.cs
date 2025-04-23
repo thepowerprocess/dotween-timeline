@@ -27,13 +27,13 @@ namespace Dott.Editor
 
         public static bool IsRightMouseButton(this Event @event)
         {
-            const int mouseButtonRight = 1;
-
-            if (Application.platform == RuntimePlatform.OSXEditor && @event.control && @event.button == mouseButtonRight)
+            const int mouseButtonLeft = 0;
+            if (Application.platform == RuntimePlatform.OSXEditor && @event.control && @event.button == mouseButtonLeft)
             {
                 return true;
             }
 
+            const int mouseButtonRight = 1;
             return @event.button == mouseButtonRight;
         }
     }
