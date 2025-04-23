@@ -22,12 +22,6 @@ namespace Dott.Editor
             set => EditorPrefs.SetBool("Dott.Loop", value);
         }
 
-        public bool FreezeFrame
-        {
-            get => EditorPrefs.GetBool("Dott.FreezeFrame", false);
-            set => EditorPrefs.SetBool("Dott.FreezeFrame", value);
-        }
-
         public DottController()
         {
             DottEditorPreview.Completed += DottEditorPreviewOnCompleted;

@@ -25,7 +25,7 @@ namespace Dott.Editor
             selection.Validate(animations);
 
             view.DrawTimeline(animations, selection.Animation, controller.IsPlaying, controller.ElapsedTime,
-                controller.Loop, controller.FreezeFrame, controller.Paused);
+                controller.Loop, controller.Paused);
 
             if (selection.Animation != null)
             {
@@ -55,7 +55,7 @@ namespace Dott.Editor
 
             view.TimeDragEnd += OnTimeDragEnd;
             view.TimeDrag += GoTo;
-            view.HeaderClicked += OnHeaderClicked;
+            view.PreviewDisabled += controller.Stop;
 
             view.AddClicked += AddAnimation;
             view.AddMore += AddMore;
@@ -65,7 +65,6 @@ namespace Dott.Editor
             view.PlayClicked += Play;
             view.StopClicked += controller.Stop;
             view.LoopToggled += ToggleLoop;
-            view.FreezeFrameClicked += ToggleFreeze;
 
             EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
         }
@@ -77,7 +76,7 @@ namespace Dott.Editor
 
             view.TimeDragEnd -= OnTimeDragEnd;
             view.TimeDrag -= GoTo;
-            view.HeaderClicked -= OnHeaderClicked;
+            view.PreviewDisabled -= controller.Stop;
 
             view.AddClicked -= AddAnimation;
             view.AddMore -= AddMore;
@@ -87,7 +86,6 @@ namespace Dott.Editor
             view.PlayClicked -= Play;
             view.StopClicked -= controller.Stop;
             view.LoopToggled -= ToggleLoop;
-            view.FreezeFrameClicked -= ToggleFreeze;
 
             EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
 
@@ -114,7 +112,7 @@ namespace Dott.Editor
 
         private void OnTimeDragEnd(Event mouseEvent)
         {
-            if (controller.FreezeFrame && !mouseEvent.IsRightMouseButton())
+            if (!mouseEvent.IsRightMouseButton())
             {
                 controller.Pause();
             }
@@ -157,7 +155,7 @@ namespace Dott.Editor
         {
             var component = ObjectFactory.AddComponent(timeline.gameObject, type);
             var animation = DottAnimation.FromComponent(component);
-            if (controller.FreezeFrame && controller.Paused)
+            if (controller.Paused)
             {
                 animation!.Delay = (float)Math.Round(controller.ElapsedTime, 2);
             }
@@ -196,24 +194,6 @@ namespace Dott.Editor
         private void ToggleLoop(bool value)
         {
             controller.Loop = value;
-        }
-
-        private void ToggleFreeze(bool value)
-        {
-            controller.FreezeFrame = value;
-
-            if (!value)
-            {
-                controller.Stop();
-            }
-        }
-
-        private void OnHeaderClicked()
-        {
-            if (controller.FreezeFrame && controller.Paused)
-            {
-                controller.Stop();
-            }
         }
 
         private void OnPlayModeStateChanged(PlayModeStateChange stateChange)

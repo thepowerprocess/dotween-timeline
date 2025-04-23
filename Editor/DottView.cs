@@ -27,10 +27,9 @@ namespace Dott.Editor
         public event Action StopClicked;
         public event Action PlayClicked;
         public event Action<bool> LoopToggled;
-        public event Action<bool> FreezeFrameClicked;
-        public event Action HeaderClicked;
+        public event Action PreviewDisabled;
 
-        public void DrawTimeline(IDOTweenAnimation[] animations, [CanBeNull] IDOTweenAnimation selected, bool isPlaying, float currentPlayingTime, bool isLooping, bool isFreezeFrame, bool isPaused)
+        public void DrawTimeline(IDOTweenAnimation[] animations, [CanBeNull] IDOTweenAnimation selected, bool isPlaying, float currentPlayingTime, bool isLooping, bool isPaused)
         {
             var rect = DottGUI.GetTimelineControlRect(animations.Length);
 
@@ -110,20 +109,14 @@ namespace Dott.Editor
                 LoopToggled?.Invoke(loopResult);
             }
 
-            var freezeFrameResult = DottGUI.FreezeFrameToggle(rect, isFreezeFrame);
-            if (freezeFrameResult != isFreezeFrame)
+            if (DottGUI.PreviewEye(headerRect, isPlaying, isPaused, isTimeDragging))
             {
-                FreezeFrameClicked?.Invoke(freezeFrameResult);
+                PreviewDisabled?.Invoke();
             }
 
             if (Event.current.type == EventType.MouseDown)
             {
                 var mousePosition = Event.current.mousePosition;
-                if (headerRect.Contains(mousePosition))
-                {
-                    HeaderClicked?.Invoke();
-                }
-
                 if (selected != null && rect.Contains(mousePosition))
                 {
                     TweenSelected?.Invoke(null);
