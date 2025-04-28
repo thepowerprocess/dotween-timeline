@@ -124,12 +124,18 @@ namespace Dott.Editor
 
         private void DragSelectedAnimation(float time)
         {
+            // Sometimes (e.g., for Frame) undo is not recorded when dragging, so we force it
+            Undo.RecordObject(selection.Animation.Component, $"Drag {selection.Animation.Label}");
+
             dragTweenTimeShift ??= time - selection.Animation.Delay;
 
             var delay = time - dragTweenTimeShift.Value;
             delay = Mathf.Max(0, delay);
             delay = (float)Math.Round(delay, 2);
             selection.Animation.Delay = delay;
+
+            // Complete undo record
+            Undo.FlushUndoRecordObjects();
         }
 
         private void OnTweenSelected(IDOTweenAnimation animation)
