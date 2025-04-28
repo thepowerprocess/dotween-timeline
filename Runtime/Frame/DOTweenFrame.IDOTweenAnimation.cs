@@ -1,9 +1,10 @@
+using System.Collections.Generic;
+using System.Linq;
 using DG.Tweening;
 using UnityEngine;
 
 namespace Dott
 {
-    [AddComponentMenu("DOTween/DOTween Frame")]
     public partial class DOTweenFrame : IDOTweenAnimation
     {
         private const string ICON_FRAME =
@@ -25,6 +26,7 @@ namespace Dott
         Texture2D IDOTweenAnimation.CustomIcon => DottUtils.ImageFromString(ICON_FRAME);
         string IDOTweenAnimation.Label => string.IsNullOrEmpty(id) ? "<i>Frame</i>" : id;
         Component IDOTweenAnimation.Component => this;
+        public IEnumerable<Object> Targets => properties.Select(property => property.Target);
 
         Tween IDOTweenAnimation.CreateEditorPreview() => CreateTween(regenerateIfExists: true);
     }
