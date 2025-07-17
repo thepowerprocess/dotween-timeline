@@ -13,6 +13,7 @@ namespace Dott.Editor
         public void Register(IDOTweenAnimation[] animations)
         {
             Unregister();
+            if (animations == null || animations.Length == 0) { return; }
             driver = ScriptableObject.CreateInstance<ScriptableObject>();
 
             var tweenTargets = animations.SelectMany(animation => animation.Targets)

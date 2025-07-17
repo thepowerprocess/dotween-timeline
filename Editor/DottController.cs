@@ -77,6 +77,11 @@ namespace Dott.Editor
 
         private static IEnumerable<IDOTweenAnimation> Sort(IDOTweenAnimation[] animations)
         {
+            if (animations == null || animations.Length == 0)
+            {
+                return Enumerable.Empty<IDOTweenAnimation>();
+            }
+
             return animations.OrderBy(animation => animation.Delay);
         }
 

@@ -23,11 +23,14 @@ namespace Dott.Editor
         {
             Timeline.OnValidate();
 
+            // Handle auto-hide functionality in editor
+            HandleAutoHideInEditor();
+
             animations = Timeline.GetComponents<MonoBehaviour>().Select(DottAnimation.FromComponent).Where(animation => animation != null).ToArray();
             selection.Validate(animations);
 
             view.DrawTimeline(animations, selection.Animation, controller.IsPlaying, controller.ElapsedTime,
-                controller.Loop, controller.Paused);
+                controller.Loop, controller.Paused, Timeline.autoHideAnimationComponents);
 
             if (selection.Animation != null)
             {
@@ -43,6 +46,17 @@ namespace Dott.Editor
             if (controller.IsPlaying || view.IsTimeDragging || view.IsTweenDragging)
             {
                 Repaint();
+            }
+        }
+
+        private void HandleAutoHideInEditor()
+        {
+            // This ensures the auto-hide functionality works properly in the editor
+            // The runtime component handles the actual hiding/showing
+            if (Timeline.autoHideAnimationComponents)
+            {
+                // Force OnValidate to run to ensure proper state
+                Timeline.OnValidate();
             }
         }
 
@@ -67,8 +81,31 @@ namespace Dott.Editor
             view.PlayClicked += Play;
             view.StopClicked += controller.Stop;
             view.LoopToggled += ToggleLoop;
+            view.AutoHideToggled += ToggleAutoHide;
 
             EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
+
+            // Register for component removal
+            EditorApplication.hierarchyChanged += OnHierarchyChanged;
+        }
+
+        private void OnHierarchyChanged()
+        {
+            // Check if the DOTweenTimeline component was removed
+            if (Timeline == null)
+            {
+                // Component was removed, restore any hidden animations
+                RestoreHiddenAnimationsOnGameObject();
+            }
+        }
+
+        private void RestoreHiddenAnimationsOnGameObject()
+        {
+            var gameObject = target as GameObject;
+            if (gameObject != null)
+            {
+                DOTweenTimeline.RestoreHiddenAnimationsOnGameObject(gameObject);
+            }
         }
 
         private void OnDisable()
@@ -88,8 +125,21 @@ namespace Dott.Editor
             view.PlayClicked -= Play;
             view.StopClicked -= controller.Stop;
             view.LoopToggled -= ToggleLoop;
+            view.AutoHideToggled -= ToggleAutoHide;
 
             EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
+            EditorApplication.hierarchyChanged -= OnHierarchyChanged;
+
+            // Ensure hidden animations are restored when editor is disabled
+            if (Timeline != null)
+            {
+                Timeline.RestoreHiddenAnimations();
+            }
+            else
+            {
+                // Timeline component was removed, restore hidden animations
+                RestoreHiddenAnimationsOnGameObject();
+            }
 
             controller.Dispose();
             controller = null;
@@ -202,6 +252,13 @@ namespace Dott.Editor
         private void ToggleLoop(bool value)
         {
             controller.Loop = value;
+        }
+
+        private void ToggleAutoHide(bool value)
+        {
+            Undo.RecordObject(Timeline, "Toggle Auto Hide Animation Components");
+            Timeline.autoHideAnimationComponents = value;
+            EditorUtility.SetDirty(Timeline);
         }
 
         private void OnPlayModeStateChanged(PlayModeStateChange stateChange)
