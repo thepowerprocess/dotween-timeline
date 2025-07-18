@@ -21,16 +21,14 @@ namespace Dott.Editor
 
         public override void OnInspectorGUI()
         {
-            Timeline.OnValidate();
-
-            // Handle auto-hide functionality in editor
+            // Handle auto-hide functionality in editor (this includes OnValidate)
             HandleAutoHideInEditor();
 
             animations = Timeline.GetComponents<MonoBehaviour>().Select(DottAnimation.FromComponent).Where(animation => animation != null).ToArray();
             selection.Validate(animations);
 
             view.DrawTimeline(animations, selection.Animation, controller.IsPlaying, controller.ElapsedTime,
-                controller.Loop, controller.Paused, Timeline.autoHideAnimationComponents);
+                controller.Loop, controller.Paused);
 
             if (selection.Animation != null)
             {
@@ -51,11 +49,10 @@ namespace Dott.Editor
 
         private void HandleAutoHideInEditor()
         {
-            // This ensures the auto-hide functionality works properly in the editor
-            // The runtime component handles the actual hiding/showing
-            if (Timeline.autoHideAnimationComponents)
+            // Auto-hide is now always enabled by default
+            // OnValidate handles the hiding logic - only call it once per frame
+            if (Event.current.type == EventType.Layout)
             {
-                // Force OnValidate to run to ensure proper state
                 Timeline.OnValidate();
             }
         }
@@ -81,7 +78,6 @@ namespace Dott.Editor
             view.PlayClicked += Play;
             view.StopClicked += controller.Stop;
             view.LoopToggled += ToggleLoop;
-            view.AutoHideToggled += ToggleAutoHide;
 
             EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
 
@@ -125,7 +121,6 @@ namespace Dott.Editor
             view.PlayClicked -= Play;
             view.StopClicked -= controller.Stop;
             view.LoopToggled -= ToggleLoop;
-            view.AutoHideToggled -= ToggleAutoHide;
 
             EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
             EditorApplication.hierarchyChanged -= OnHierarchyChanged;
@@ -219,6 +214,9 @@ namespace Dott.Editor
             }
 
             selection.Set(animation);
+
+            // Handle the new component addition to prevent flickering
+            timeline.HandleNewComponentAdded();
         }
 
         private void Remove()
@@ -252,13 +250,6 @@ namespace Dott.Editor
         private void ToggleLoop(bool value)
         {
             controller.Loop = value;
-        }
-
-        private void ToggleAutoHide(bool value)
-        {
-            Undo.RecordObject(Timeline, "Toggle Auto Hide Animation Components");
-            Timeline.autoHideAnimationComponents = value;
-            EditorUtility.SetDirty(Timeline);
         }
 
         private void OnPlayModeStateChanged(PlayModeStateChange stateChange)

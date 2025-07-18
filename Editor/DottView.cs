@@ -27,10 +27,9 @@ namespace Dott.Editor
         public event Action StopClicked;
         public event Action PlayClicked;
         public event Action<bool> LoopToggled;
-        public event Action<bool> AutoHideToggled;
         public event Action PreviewDisabled;
 
-        public void DrawTimeline(IDOTweenAnimation[] animations, [CanBeNull] IDOTweenAnimation selected, bool isPlaying, float currentPlayingTime, bool isLooping, bool isPaused, bool autoHideEnabled = true)
+        public void DrawTimeline(IDOTweenAnimation[] animations, [CanBeNull] IDOTweenAnimation selected, bool isPlaying, float currentPlayingTime, bool isLooping, bool isPaused)
         {
             var rect = DottGUI.GetTimelineControlRect(animations.Length);
 
@@ -108,13 +107,6 @@ namespace Dott.Editor
             if (loopResult != isLooping)
             {
                 LoopToggled?.Invoke(loopResult);
-            }
-
-            // Auto-hide toggle in bottom right corner
-            var autoHideResult = DottGUI.AutoHideToggle(rect, autoHideEnabled);
-            if (autoHideResult != autoHideEnabled)
-            {
-                AutoHideToggled?.Invoke(autoHideResult);
             }
 
             if (DottGUI.PreviewEye(headerRect, isPlaying, isPaused, isTimeDragging))

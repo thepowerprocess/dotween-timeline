@@ -462,26 +462,6 @@ namespace Dott.Editor
             return GUI.Toggle(toggleRect, value, iconContent, style);
         }
 
-        public static bool AutoHideToggle(Rect rect, bool value)
-        {
-            var buttonSize = new Vector2(24, 24);
-            var position = new Vector2(rect.x + rect.width - buttonSize.x - 2, rect.y + rect.height - BOTTOM_HEIGHT + (BOTTOM_HEIGHT - buttonSize.y) / 2);
-            var buttonRect = new Rect(position, buttonSize);
-
-            var iconContent = EditorGUIUtility.TrIconContent(
-                value ? "animationvisibilitytoggleon" : "animationvisibilitytoggleoff",
-                value ? "Show animation components" : "Hide animation components"
-            );
-
-            var style = new GUIStyle(GUI.skin.button) { padding = new RectOffset(0, 0, 0, 0) };
-            var contentColor = GUI.contentColor;
-            GUI.contentColor = value ? Color.white : Color.gray;
-            var result = GUI.Toggle(buttonRect, value, iconContent, style);
-            GUI.contentColor = contentColor;
-
-            return result;
-        }
-
         private static void RoundRect(Rect rect, Color color, float borderRadius, float borderWidth = 0)
         {
             GUI.DrawTexture(rect, EditorGUIUtility.whiteTexture, ScaleMode.StretchToFill, alphaBlend: false,
